@@ -1,0 +1,496 @@
+{
+  "@@locale": "ru",
+  "appTitle": "TriGrid",
+  "appTagline": "Тактильная стратегия о линиях, связях и захвате треугольников.",
+  "boardPreviewLabel": "Миниатюрное треугольное игровое поле с колышками",
+  "playOnOnePhone": "Играть на одном телефоне",
+  "mainMenuLocalDescription": "Создайте матч для двух–четырёх игроков с передачей устройства.",
+  "localGameSetupTitle": "Локальная игра",
+  "localGameSetupSubtitle": "Выберите поле и передавайте устройство после каждого хода.",
+  "playerCountLabel": "Игроки",
+  "boardSizeLabel": "Игровое поле",
+  "rulesetLabel": "Правила",
+  "boardSizeSmall": "Малое",
+  "boardSizeClassic": "Классическое",
+  "boardSizeLarge": "Большое",
+  "boardSizeHuge": "Огромное",
+  "boardSizeCustom": "Своё",
+  "classicRules": "Классические правила",
+  "customRules": "Особые правила",
+  "customRadiusLabel": "Радиус: {radius}",
+  "@customRadiusLabel": {
+    "placeholders": {
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "startMatch": "Начать матч",
+  "playerDefaultName": "Игрок {number}",
+  "@playerDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "turnLabel": "Ход",
+  "scoreLabel": "Счёт: {count}",
+  "@scoreLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bandsRemainingLabel": "Резинки: {count}",
+  "@bandsRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markersRemainingLabel": "Метки: {count}",
+  "@markersRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pauseGame": "Пауза",
+  "resumeGame": "Продолжить",
+  "restartMatch": "Начать заново",
+  "backToSetup": "К настройке",
+  "moveBoard": "Переместить поле",
+  "resetCamera": "Сбросить камеру",
+  "showHint": "Показать допустимый ход",
+  "chooseStartPeg": "Коснитесь колышка или потяните от него, чтобы поставить резинку.",
+  "chooseEndPeg": "Выберите один из подсвеченных конечных колышков.",
+  "hintShown": "Допустимый ход подсвечен.",
+  "invalidPlacement": "Здесь нельзя поставить резинку. Выберите подсвеченный колышек.",
+  "moveGameEnded": "Матч уже завершён.",
+  "moveDuplicateAction": "Это действие уже обработано.",
+  "moveStaleRevision": "Поле изменилось. Повторите ход.",
+  "moveNotPlayersTurn": "Сейчас ход другого игрока.",
+  "moveNoBandsRemaining": "У этого игрока не осталось резинок.",
+  "moveUnknownEndpoint": "Оба конца должны быть закреплены на колышках игрового поля.",
+  "moveWrongAxis": "Резинка должна идти по одному из трёх направлений сетки.",
+  "moveWrongLength": "Резинка должна охватывать ровно четыре соседних колышка.",
+  "moveOutsideBoard": "Вся резинка должна находиться внутри игрового поля.",
+  "moveDuplicateBand": "Такая резинка уже есть на поле.",
+  "moveAddsNoEdge": "Эта резинка не добавит нового ребра.",
+  "moveNotConnected": "Резинка должна касаться существующей сети.",
+  "capturedTriangles": "Захвачено треугольников: {count}.",
+  "@capturedTriangles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePaused": "Игра на паузе",
+  "gamePausedDescription": "Управление полем отключено до продолжения игры.",
+  "matchResultTitle": "Матч завершён",
+  "winnerName": "Победитель: {name}",
+  "@winnerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tiedWinners": "Ничья: {names}",
+  "@tiedWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "resultMarkerLimit": "Достигнут лимит меток",
+  "resultBandsExhausted": "Все резинки сыграны",
+  "resultNoLegalMoves": "Допустимых ходов не осталось",
+  "finalScores": "Итоговый счёт",
+  "settingsTitle": "Звук и движение",
+  "musicVolume": "Музыка",
+  "soundEffectsVolume": "Звуковые эффекты",
+  "ambientVolume": "Фоновый звук",
+  "muteAll": "Выключить весь звук",
+  "haptics": "Тактильная отдача",
+  "reducedMotion": "Уменьшить движение",
+  "reducedMotionDescription": "Использует мгновенные переходы и отключает эффекты камеры.",
+  "particles": "Частицы и конфетти",
+  "screenShake": "Встряска при захвате",
+  "animationSpeed": "Скорость анимации",
+  "replayMatch": "Повтор матча",
+  "replayingMatch": "Повтор принятых ходов…",
+  "seatSetupTitle": "Игроки и боты",
+  "humanPlayer": "Игрок-человек",
+  "botPlayer": "Игрок-бот",
+  "botDifficultyLabel": "Уровень бота",
+  "botPersonalityLabel": "Характер бота",
+  "botThinkingTime": "Время на ход: {milliseconds} мс",
+  "@botThinkingTime": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "botDifficultyBeginner": "Новичок",
+  "botDifficultyEasy": "Лёгкий",
+  "botDifficultyNormal": "Средний",
+  "botDifficultyHard": "Сложный",
+  "botDifficultyExpert": "Эксперт",
+  "botPersonalityAggressive": "Агрессивный",
+  "botPersonalityDefensive": "Оборонительный",
+  "botPersonalityBalanced": "Сбалансированный",
+  "botVsBotDebug": "Сделать все места ботами",
+  "botThinkingPlayer": "{name} думает…",
+  "@botThinkingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "passDeviceTitle": "Передайте устройство",
+  "passDeviceDescription": "Передайте устройство игроку {name}. Поле скрыто, пока игрок не будет готов.",
+  "@passDeviceDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "readyForTurn": "Я готов",
+  "connectionLatency": "LAN {milliseconds} мс",
+  "@connectionLatency": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionReconnecting": "Переподключение…",
+  "connectionDisconnected": "Связь потеряна",
+  "connectionIncompatible": "Несовместимая версия",
+  "connectionClosed": "Соединение закрыто",
+  "networkGamePaused": "Матч по LAN приостановлен",
+  "networkWaitingFor": "Ожидание переподключения: {names}.",
+  "@networkWaitingFor": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "networkPlayerReconnected": "Все подключены. Хост может продолжить матч.",
+  "networkHostWillDecide": "Хост может подождать, удалить игрока или заменить его ботом.",
+  "replaceWithBot": "Заменить ботом",
+  "removePlayer": "Удалить игрока",
+  "lanPlay": "Локальная сеть",
+  "lanDescription": "Играйте через одну сеть Wi-Fi или точку доступа телефона.",
+  "lanMenuTitle": "Игра по LAN",
+  "hostRoom": "Создать игру",
+  "joinRoom": "Присоединиться",
+  "hostSetupTitle": "Создать игру по LAN",
+  "joinSetupTitle": "Присоединиться к игре",
+  "playerNameLabel": "Имя игрока",
+  "roomNameLabel": "Название комнаты",
+  "roomDefaultName": "Комната игрока {name}",
+  "@roomDefaultName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "createRoom": "Создать комнату",
+  "discoveredRooms": "Комнаты рядом",
+  "scanningNetwork": "Поиск в локальной сети…",
+  "manualJoin": "Подключение по IP",
+  "hostAddressLabel": "Адрес хоста",
+  "portLabel": "Порт",
+  "roomCodeLabel": "Код комнаты",
+  "scanQr": "Сканировать QR-код",
+  "connectToRoom": "Подключиться",
+  "lanConnectionFailed": "Не удалось подключиться. Проверьте адрес, код комнаты и Wi-Fi.",
+  "discoveryUnavailable": "Автопоиск недоступен. Можно подключиться по IP или QR-коду.",
+  "qrScannerTitle": "Сканирование QR комнаты",
+  "qrInstruction": "Наведите камеру на QR-код на устройстве хоста.",
+  "invalidRoomQr": "Это не совместимый код комнаты TriGrid.",
+  "lobbyTitle": "Игровая комната",
+  "roomCodeDisplay": "Код комнаты: {code}",
+  "@roomCodeDisplay": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "hostAddressDisplay": "Хост: {address}:{port}",
+  "@hostAddressDisplay": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      },
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "playersConnected": "Занято мест: {count} из 4",
+  "@playersConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hostBadge": "Хост",
+  "readyStatus": "Готов",
+  "notReadyStatus": "Не готов",
+  "connectedStatus": "Подключён",
+  "disconnectedStatus": "Связь потеряна",
+  "openSeat": "Свободное место",
+  "addBot": "Добавить бота",
+  "removeSeat": "Освободить место",
+  "botDefaultName": "Бот {number}",
+  "@botDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForPlayers": "Дождитесь подключения и готовности всех игроков.",
+  "startLanMatch": "Начать матч по LAN",
+  "playerColorLabel": "Цвет игрока",
+  "playerColorMoss": "Мшистый круг",
+  "playerColorCoral": "Коралловый ромб",
+  "playerColorBlue": "Синий треугольник",
+  "playerColorGold": "Золотой квадрат",
+  "savedLanMatch": "Сохранённое место в LAN",
+  "reconnectSavedLan": "Переподключиться",
+  "forgetSavedLan": "Забыть",
+  "continueMatch": "Продолжить",
+  "soloPlay": "Игра с ботами",
+  "soloSetupTitle": "Одиночная игра",
+  "soloSetupSubtitle": "Выберите соперников, силу ботов и игровое поле.",
+  "confirmMoveTitle": "Поставить эту резинку?",
+  "confirmMoveDescription": "Ход станет окончательным сразу после принятия.",
+  "placeBand": "Поставить резинку",
+  "appSettingsTitle": "Настройки",
+  "profileAndLanguage": "Игрок и язык",
+  "languageLabel": "Язык",
+  "languageSystem": "Язык устройства",
+  "languageEnglish": "Английский",
+  "languageKazakh": "Казахский",
+  "languageRussian": "Русский",
+  "appearanceTitle": "Оформление",
+  "themeLabel": "Тема",
+  "themeSystem": "Как на устройстве",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "highContrast": "Высокая контрастность",
+  "highContrastDescription": "Усилить контраст текста и границ.",
+  "playerSymbolsTitle": "Маркеры без зависимости от цвета",
+  "playerSymbolsDescription": "У каждого игрока всегда есть уникальная фигура: круг, ромб, треугольник или квадрат.",
+  "audioTitle": "Звук и вибрация",
+  "accessibilityTitle": "Движение и управление",
+  "confirmMoves": "Подтверждать каждый ход",
+  "confirmMovesDescription": "Спрашивать перед отправкой выбранной резинки. Ход по LAN нельзя отменить после принятия хостом.",
+  "rulesTitle": "Правила",
+  "rulesIntro": "TriGrid проходит на треугольной решётке внутри шестиугольника. Стройте единую сеть резинок и забирайте маленькие треугольники, которые замкнули.",
+  "rulesGoalTitle": "Цель",
+  "rulesGoalBody": "Захватите больше единичных треугольников, чем соперники. Счёт равен числу треугольников с вашим маркером.",
+  "rulesPlacementTitle": "Установка резинки",
+  "rulesPlacementBody": "Ход охватывает ровно четыре последовательных колышка — три единичных ребра — вдоль одной из трёх осей решётки. Он должен оставаться на поле и добавлять хотя бы одно новое ребро.",
+  "rulesConnectionTitle": "Связная сеть",
+  "rulesConnectionBody": "Первую резинку можно поставить в любом допустимом месте. Каждая следующая должна касаться существующей сети хотя бы одним колышком. Полный дубликат запрещён, полезное частичное перекрытие разрешено.",
+  "rulesCaptureTitle": "Захват треугольников",
+  "rulesCaptureBody": "Если новая резинка завершает третью сторону свободного маленького треугольника, вы сразу его захватываете. Один ход может закрыть несколько треугольников.",
+  "rulesEndingTitle": "Конец игры",
+  "rulesEndingBody": "Матч заканчивается при достижении лимита маркеров, после использования доступных резинок или когда не осталось допустимых ходов. Побеждает лучший счёт; равные лучшие результаты дают ничью.",
+  "rulesBoardsTitle": "Поля и запас",
+  "rulesBoardsBody": "Классическое поле имеет радиус 3, 37 колышков и 54 треугольника. Два игрока получают по 10 резинок, три или четыре — по 12. Для других размеров действует явно отмеченный расчёт пользовательских запасов.",
+  "botGuideTitle": "Сила ботов",
+  "botGuideIntro": "Все боты соблюдают те же правила и видят только открытое состояние игры. Высокие уровни глубже оценивают ответы и последствия для защиты; сложность — не просто задержка.",
+  "botBeginnerDescription": "В основном случайные допустимые ходы с редкими немедленными захватами. Быстрый и намеренно снисходительный.",
+  "botEasyDescription": "Предпочитает захваты и избегает простых подарков, используя неглубокую тактическую оценку.",
+  "botNormalDescription": "Сочетает счёт, возможности следующего игрока, связи и блокирование с ограниченным просмотром вперёд.",
+  "botHardDescription": "Использует ограниченное временем углубление, порядок ходов, кэш и многопользовательский поиск.",
+  "botExpertDescription": "Ищет глубже в рамках бюджета и оценивает ловушки, множественные захваты, защиту и ответы соперников.",
+  "botPersonalitiesTitle": "Характеры",
+  "botPersonalitiesDescription": "Агрессивный ценит быстрый захват, Оборонительный сокращает возможности следующего игрока, а Сбалансированный сочетает оба подхода.",
+  "tutorialTitle": "Обучение",
+  "tutorialPlaceTitle": "Растяните через четыре колышка",
+  "tutorialPlaceBody": "Коснитесь начального и подсвеченного конечного колышка или проведите между ними. Каждая резинка покрывает ровно три прямых единичных ребра.",
+  "tutorialConnectTitle": "Присоединитесь к сети",
+  "tutorialConnectBody": "После первого хода каждая резинка должна касаться связной сети одним или несколькими колышками.",
+  "tutorialCaptureTitle": "Замкните треугольник",
+  "tutorialCaptureBody": "Завершите третью сторону маленького треугольника, чтобы поставить маркер и получить очко. Одна резинка может замкнуть сразу несколько.",
+  "tutorialWinTitle": "Читайте поле",
+  "tutorialWinBody": "Следите за запасом, защищайте будущие захваты и не оставляйте сопернику сильный ответ. Побеждает лучший итоговый счёт.",
+  "previousStep": "Назад",
+  "nextStep": "Далее",
+  "startPractice": "Начать практику",
+  "tutorialBotName": "Учебный бот",
+  "tutorialGameFirstMove": "Попробуйте сделать первый ход в любом месте поля.",
+  "tutorialGameConnected": "Теперь соединяйте каждую новую резинку с сетью.",
+  "tutorialGameCapture": "Ищите треугольники с двумя готовыми сторонами.",
+  "statisticsTitle": "Статистика",
+  "clearStatistics": "Очистить статистику",
+  "clearStatisticsConfirmation": "Удалить всю локальную и LAN-статистику? Сохранённые повторы останутся.",
+  "clearAction": "Очистить",
+  "localStatistics": "Локальные матчи",
+  "lanStatistics": "Матчи по LAN",
+  "matchesPlayed": "Сыграно матчей",
+  "wins": "Победы",
+  "winRate": "Доля побед",
+  "capturedTrianglesStat": "Захвачено треугольников",
+  "largestMultiCapture": "Лучший множественный захват",
+  "averageScore": "Средний счёт",
+  "winRateByBotLevel": "Победы по уровню бота",
+  "replayLibraryTitle": "Повторы",
+  "noReplaysTitle": "Нет сохранённых повторов",
+  "noReplaysDescription": "Завершите матч, и его проверенная история ходов появится здесь.",
+  "localMode": "Локально",
+  "lanMode": "LAN",
+  "replayMoveCount": "Ходов: {count}",
+  "@replayMoveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "replayActions": "Действия с повтором",
+  "playReplay": "Воспроизвести",
+  "deleteReplay": "Удалить повтор",
+  "aboutTitle": "О приложении",
+  "appVersion": "Версия {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutOriginalWork": "Оригинальная стратегическая игра на Flutter и Flame с собственным оформлением, созданными звуками и без скопированных игровых ресурсов.",
+  "privacyTitle": "Конфиденциальность",
+  "privacyBody": "TriGrid работает без интернета. Локальные матчи, настройки, статистика, повторы и данные переподключения по LAN остаются на устройстве. Игра по LAN отправляет данные только устройствам в комнате и не использует внешний игровой сервер.",
+  "thirdPartyLicenses": "Лицензии открытого ПО",
+  "thirdPartyLicensesDescription": "Просмотреть лицензии Flutter и подключённых пакетов.",
+  "assetCreditsBody": "Поставляемый набор звуков создан специально для TriGrid. Источники и инструкции по замене записаны в ASSET_LICENSES.md.",
+  "turnTimerLabel": "Таймер хода",
+  "turnTimerOff": "Выключен",
+  "turnTimerSeconds": "{seconds} секунд",
+  "@turnTimerSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "turnTimerCompact": "{seconds} с",
+  "@turnTimerCompact": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "networkIntegrityError": "Не удалось проверить состояние. Ожидание корректного снимка от хоста.",
+  "networkStateResynchronized": "Состояние игры безопасно синхронизировано с хостом.",
+  "networkReconnectFailed": "Не удалось подключиться к хосту повторно. Проверьте локальную сеть.",
+  "networkUnexpectedError": "Хост отклонил эту сетевую операцию.",
+  "networkHostEndedTitle": "Хост завершил матч",
+  "networkHostEndedDescription": "Последняя проверенная позиция — ревизия {revision}. Её можно сохранить на этом устройстве.",
+  "@networkHostEndedDescription": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "saveLastPosition": "Сохранить позицию",
+  "exitToMenu": "Выйти в меню",
+  "networkSnapshotSaved": "Последняя проверенная позиция LAN сохранена.",
+  "networkSnapshotSaveFailed": "Не удалось проверить или сохранить эту позицию LAN.",
+  "savedLanPosition": "Сохранённая позиция LAN",
+  "deleteSavedPosition": "Удалить сохранённую позицию",
+  "networkRevision": "Ревизия {revision}",
+  "@networkRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "hostAddressExample": "192.168.1.10",
+  "lanPermissionTitle": "Разрешить доступ к локальной сети",
+  "lanPermissionDescription": "В современных версиях Android TriGrid нужен доступ к ближайшим устройствам, чтобы находить комнаты и подключаться по Wi-Fi. Если поиск недоступен, можно продолжить и ввести IP вручную.",
+  "openSystemSettings": "Открыть настройки",
+  "continueAction": "Продолжить",
+  "debugDiagnosticsTooltip": "Отладочная диагностика",
+  "debugFps": "FPS {value}",
+  "@debugFps": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugFrameTime": "Кадр {value} мс",
+  "@debugFrameTime": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugLegalMoves": "Допустимых: {count}",
+  "@debugLegalMoves": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugBotNodes": "Узлов: {count}",
+  "@debugBotNodes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugLanLatency": "LAN {value}",
+  "@debugLanLatency": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRevision": "Рев. {revision}",
+  "@debugRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "debugStateHash": "Хэш {value}",
+  "@debugStateHash": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

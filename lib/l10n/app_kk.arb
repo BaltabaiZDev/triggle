@@ -1,0 +1,496 @@
+{
+  "@@locale": "kk",
+  "appTitle": "TriGrid",
+  "appTagline": "Сызықтар, байланыстар және иеленген үшбұрыштар туралы тактикалық ойын.",
+  "boardPreviewLabel": "Үшбұрышты қазықтары бар шағын ойын алаңы",
+  "playOnOnePhone": "Бір телефонда ойнау",
+  "mainMenuLocalDescription": "Екіден төрт ойыншыға дейін кезекпен ойнайтын ойын құрыңыз.",
+  "localGameSetupTitle": "Жергілікті ойын",
+  "localGameSetupSubtitle": "Ойын алаңын таңдап, әр кезектен кейін құрылғыны келесі ойыншыға беріңіз.",
+  "playerCountLabel": "Ойыншылар",
+  "boardSizeLabel": "Ойын алаңы",
+  "rulesetLabel": "Ережелер",
+  "boardSizeSmall": "Кіші",
+  "boardSizeClassic": "Классикалық",
+  "boardSizeLarge": "Үлкен",
+  "boardSizeHuge": "Өте үлкен",
+  "boardSizeCustom": "Арнайы",
+  "classicRules": "Классикалық ережелер",
+  "customRules": "Арнайы ережелер",
+  "customRadiusLabel": "Радиусы: {radius}",
+  "@customRadiusLabel": {
+    "placeholders": {
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "startMatch": "Ойынды бастау",
+  "playerDefaultName": "Ойыншы {number}",
+  "@playerDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "turnLabel": "Кезек",
+  "scoreLabel": "Ұпай: {count}",
+  "@scoreLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bandsRemainingLabel": "{count} таспа",
+  "@bandsRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markersRemainingLabel": "{count} белгі",
+  "@markersRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pauseGame": "Кідірту",
+  "resumeGame": "Жалғастыру",
+  "restartMatch": "Қайта бастау",
+  "backToSetup": "Баптауға оралу",
+  "moveBoard": "Алаңды жылжыту",
+  "resetCamera": "Камераны қалпына келтіру",
+  "showHint": "Жарамды жүрісті көрсету",
+  "chooseStartPeg": "Қазықты түртіңіз немесе таспаны орнату үшін одан сүйреңіз.",
+  "chooseEndPeg": "Белгіленген соңғы қазықтардың бірін таңдаңыз.",
+  "hintShown": "Жарамды жүріс белгіленді.",
+  "invalidPlacement": "Бұл жерге таспа қоюға болмайды. Белгіленген қазықты таңдаңыз.",
+  "moveGameEnded": "Ойын аяқталды.",
+  "moveDuplicateAction": "Бұл әрекет бұрын өңделген.",
+  "moveStaleRevision": "Ойын алаңы өзгерді. Жүрісті қайталаңыз.",
+  "moveNotPlayersTurn": "Қазір басқа ойыншының кезегі.",
+  "moveNoBandsRemaining": "Бұл ойыншыда таспа қалмады.",
+  "moveUnknownEndpoint": "Таспаның екі ұшы да алаңдағы қазықтарға бекітілуі керек.",
+  "moveWrongAxis": "Таспа тордың үш бағытының бірімен жүруі керек.",
+  "moveWrongLength": "Таспа қатар тұрған дәл төрт қазықты қамтуы керек.",
+  "moveOutsideBoard": "Таспа толығымен ойын алаңының ішінде болуы керек.",
+  "moveDuplicateBand": "Мұндай таспа алаңда бар.",
+  "moveAddsNoEdge": "Бұл таспа жаңа қыр қоспайды.",
+  "moveNotConnected": "Таспа бар желіге жанасуы керек.",
+  "capturedTriangles": "{count} үшбұрыш иеленді.",
+  "@capturedTriangles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePaused": "Ойын кідіртілді",
+  "gamePausedDescription": "Жалғастырғанша ойын алаңын басқару өшірілді.",
+  "matchResultTitle": "Ойын аяқталды",
+  "winnerName": "Жеңімпаз: {name}",
+  "@winnerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tiedWinners": "Тең ойын: {names}",
+  "@tiedWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "resultMarkerLimit": "Белгілер шегіне жетті",
+  "resultBandsExhausted": "Барлық таспа ойналды",
+  "resultNoLegalMoves": "Жарамды жүріс қалмады",
+  "finalScores": "Қорытынды ұпайлар",
+  "settingsTitle": "Дыбыс және қозғалыс",
+  "musicVolume": "Музыка",
+  "soundEffectsVolume": "Дыбыс әсерлері",
+  "ambientVolume": "Қоршаған дыбыс",
+  "muteAll": "Барлық дыбысты өшіру",
+  "haptics": "Діріл кері байланысы",
+  "reducedMotion": "Қозғалысты азайту",
+  "reducedMotionDescription": "Лезде ауысуды қолданып, камера әсерлерін өшіреді.",
+  "particles": "Бөлшектер мен конфетти",
+  "screenShake": "Иелену кезіндегі діріл",
+  "animationSpeed": "Анимация жылдамдығы",
+  "replayMatch": "Ойынды қайталау",
+  "replayingMatch": "Қабылданған жүрістер қайталануда…",
+  "seatSetupTitle": "Ойыншылар мен боттар",
+  "humanPlayer": "Адам ойыншы",
+  "botPlayer": "Бот ойыншы",
+  "botDifficultyLabel": "Бот деңгейі",
+  "botPersonalityLabel": "Бот мінезі",
+  "botThinkingTime": "Ойлану уақыты: {milliseconds} мс",
+  "@botThinkingTime": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "botDifficultyBeginner": "Бастаушы",
+  "botDifficultyEasy": "Жеңіл",
+  "botDifficultyNormal": "Қалыпты",
+  "botDifficultyHard": "Қиын",
+  "botDifficultyExpert": "Сарапшы",
+  "botPersonalityAggressive": "Шабуылшыл",
+  "botPersonalityDefensive": "Қорғанысшыл",
+  "botPersonalityBalanced": "Теңгерімді",
+  "botVsBotDebug": "Барлық орынды бот ету",
+  "botThinkingPlayer": "{name} ойланып жатыр…",
+  "@botThinkingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "passDeviceTitle": "Құрылғыны беріңіз",
+  "passDeviceDescription": "Құрылғыны {name} ойыншысына беріңіз. Ол дайын болғанша алаң жасырын тұрады.",
+  "@passDeviceDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "readyForTurn": "Мен дайынмын",
+  "connectionLatency": "Жергілікті желі {milliseconds} мс",
+  "@connectionLatency": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionReconnecting": "Қайта қосылу…",
+  "connectionDisconnected": "Байланыс үзілді",
+  "connectionIncompatible": "Нұсқалар сәйкес емес",
+  "connectionClosed": "Байланыс жабылды",
+  "networkGamePaused": "Жергілікті желідегі ойын кідіртілді",
+  "networkWaitingFor": "{names} қайта қосылғанша күту.",
+  "@networkWaitingFor": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "networkPlayerReconnected": "Барлығы қосылды. Хост ойынды жалғастыра алады.",
+  "networkHostWillDecide": "Хост күте алады, ойыншыны шығарады немесе ботпен алмастырады.",
+  "replaceWithBot": "Ботпен алмастыру",
+  "removePlayer": "Ойыншыны шығару",
+  "lanPlay": "Жергілікті желі",
+  "lanDescription": "Бір Wi-Fi желісінде немесе бір телефонның хотспоты арқылы ойнаңыз.",
+  "lanMenuTitle": "Желілік ойын",
+  "hostRoom": "Ойын құру",
+  "joinRoom": "Ойынға қосылу",
+  "hostSetupTitle": "Желілік ойын құру",
+  "joinSetupTitle": "Желілік ойынға қосылу",
+  "playerNameLabel": "Ойыншы аты",
+  "roomNameLabel": "Бөлме атауы",
+  "roomDefaultName": "{name} бөлмесі",
+  "@roomDefaultName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "createRoom": "Бөлме құру",
+  "discoveredRooms": "Жақын бөлмелер",
+  "scanningNetwork": "Жергілікті желі ізделуде…",
+  "manualJoin": "IP арқылы қосылу",
+  "hostAddressLabel": "Хост мекенжайы",
+  "portLabel": "Порт",
+  "roomCodeLabel": "Бөлме коды",
+  "scanQr": "QR кодын сканерлеу",
+  "connectToRoom": "Қосылу",
+  "lanConnectionFailed": "Желілік бөлмеге қосылмады. Мекенжайды, кодты және Wi-Fi желісін тексеріңіз.",
+  "discoveryUnavailable": "Автоматты іздеу қолжетімсіз. IP және QR арқылы қосылу жұмыс істейді.",
+  "qrScannerTitle": "Бөлме QR кодын сканерлеу",
+  "qrInstruction": "Камераны хост құрылғысындағы QR кодына бағыттаңыз.",
+  "invalidRoomQr": "Бұл TriGrid бөлмесінің үйлесімді коды емес.",
+  "lobbyTitle": "Ойын бөлмесі",
+  "roomCodeDisplay": "Бөлме коды: {code}",
+  "@roomCodeDisplay": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "hostAddressDisplay": "Хост: {address}:{port}",
+  "@hostAddressDisplay": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      },
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "playersConnected": "4 орынның {count} орны толды",
+  "@playersConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hostBadge": "Хост",
+  "readyStatus": "Дайын",
+  "notReadyStatus": "Дайын емес",
+  "connectedStatus": "Қосылды",
+  "disconnectedStatus": "Байланыс үзілді",
+  "openSeat": "Бос орын",
+  "addBot": "Бот қосу",
+  "removeSeat": "Орынды босату",
+  "botDefaultName": "Бот {number}",
+  "@botDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForPlayers": "Барлық адам ойыншы қосылып, дайын екенін белгілегенше күтіңіз.",
+  "startLanMatch": "Желілік ойынды бастау",
+  "playerColorLabel": "Ойыншы түсі",
+  "playerColorMoss": "Мүк түсті шеңбер",
+  "playerColorCoral": "Маржан түсті ромб",
+  "playerColorBlue": "Көк үшбұрыш",
+  "playerColorGold": "Алтын түсті шаршы",
+  "savedLanMatch": "Сақталған желілік орын",
+  "reconnectSavedLan": "Қайта қосылу",
+  "forgetSavedLan": "Ұмыту",
+  "continueMatch": "Жалғастыру",
+  "soloPlay": "Боттарға қарсы",
+  "soloSetupTitle": "Жеке ойын",
+  "soloSetupSubtitle": "Қарсыластарды, бот күшін және ойын алаңын таңдаңыз.",
+  "confirmMoveTitle": "Осы резеңкені орналастыру керек пе?",
+  "confirmMoveDescription": "Жүріс қабылданған сәттен бастап қайтарылмайды.",
+  "placeBand": "Резеңкені орналастыру",
+  "appSettingsTitle": "Баптаулар",
+  "profileAndLanguage": "Ойыншы және тіл",
+  "languageLabel": "Тіл",
+  "languageSystem": "Құрылғы тілі",
+  "languageEnglish": "Ағылшын тілі",
+  "languageKazakh": "Қазақ тілі",
+  "languageRussian": "Орыс тілі",
+  "appearanceTitle": "Сыртқы көрініс",
+  "themeLabel": "Тақырып",
+  "themeSystem": "Құрылғыға сай",
+  "themeLight": "Ашық",
+  "themeDark": "Қараңғы",
+  "highContrast": "Жоғары контраст",
+  "highContrastDescription": "Жиектер мен мәтін контрастын күшейтеді.",
+  "playerSymbolsTitle": "Түске тәуелсіз белгілер",
+  "playerSymbolsDescription": "Әр ойыншы түсімен бірге бірегей шеңбер, ромб, үшбұрыш немесе шаршымен белгіленеді.",
+  "audioTitle": "Дыбыс және діріл",
+  "accessibilityTitle": "Қозғалыс және басқару",
+  "confirmMoves": "Әр жүрісті растау",
+  "confirmMovesDescription": "Таңдалған резеңкені жібермес бұрын сұрайды. Хост қабылдаған желілік жүріс қайтарылмайды.",
+  "rulesTitle": "Ережелер",
+  "rulesIntro": "TriGrid алтыбұрыш ішіндегі үшбұрышты торда ойналады. Резеңкелерден бір байланысқан желі құрып, жапқан кіші үшбұрыштарды иеленіңіз.",
+  "rulesGoalTitle": "Мақсат",
+  "rulesGoalBody": "Қарсыластардан көбірек бірлік үшбұрыш иеленіңіз. Ұпай — белгіңіз қойылған үшбұрыштар саны.",
+  "rulesPlacementTitle": "Резеңке орналастыру",
+  "rulesPlacementBody": "Жүріс тордың үш бағытының бірінде қатар тұрған дәл төрт қазықты, яғни үш бірлік қырды қамтиды. Ол алаңнан шықпай, кемінде бір жаңа қыр қосуы керек.",
+  "rulesConnectionTitle": "Желіні жалғау",
+  "rulesConnectionBody": "Алғашқы резеңкені кез келген заңды жерге қоюға болады. Кейінгі әр резеңке бар желімен кемінде бір қазықта түйісуі тиіс. Дәл қайталауға болмайды, жаңа қыр қосатын жартылай қабаттасуға болады.",
+  "rulesCaptureTitle": "Үшбұрышты иелену",
+  "rulesCaptureBody": "Жаңа резеңке иесіз кіші үшбұрыштың үшінші қабырғасын жапса, ол бірден сізге өтеді. Бір жүріс бірнеше үшбұрышты жаба алады.",
+  "rulesEndingTitle": "Ойынның соңы",
+  "rulesEndingBody": "Белгі шегіне жеткенде, қолжетімді резеңкелер біткенде немесе заңды жүріс қалмағанда ойын аяқталады. Ең жоғары ұпай жеңеді; тең ұпай тең ойын болады.",
+  "rulesBoardsTitle": "Алаңдар және қор",
+  "rulesBoardsBody": "Классикалық алаңның радиусы 3, онда 37 қазық және 54 үшбұрыш бар. Екі ойыншыға 10-нан, үш не төрт ойыншыға 12-ден резеңке беріледі. Басқа өлшемдерде арнайы қор формуласы қолданылады.",
+  "botGuideTitle": "Бот деңгейлері",
+  "botGuideIntro": "Барлық бот бір ережемен ойнап, тек ашық ойын күйін көреді. Жоғары деңгейлер жауап жүрістер мен қорғаныс салдарын тереңірек бағалайды.",
+  "botBeginnerDescription": "Көбіне кездейсоқ заңды жүріс жасап, кейде дайын ұпайды алады. Жылдам әрі әдейі жеңіл.",
+  "botEasyDescription": "Таяу иеленуді таңдап, қарапайым сыйлықтан қашатын таяз тактикалық баға қолданады.",
+  "botNormalDescription": "Ұпайды, келесі ойыншыға ашылатын мүмкіндікті, байланыс пен тосқауылды шектеулі тереңдікте теңестіреді.",
+  "botHardDescription": "Уақытпен шектелген тереңдетілген іздеу, жүріс реттеу, кэш және көп ойыншылы іздеу қолданады.",
+  "botExpertDescription": "Берілген уақыт ішінде тереңірек іздеп, тұзақтарды, көптік иеленуді, қорғанысты және қарсыластың жауабын бағалайды.",
+  "botPersonalitiesTitle": "Мінездер",
+  "botPersonalitiesDescription": "Шабуылшыл бот жедел ұпайды, Қорғанысшыл келесі ойыншының мүмкіндігін азайтуды, ал Теңгерімді бот екеуін де бағалайды.",
+  "tutorialTitle": "Үйрету",
+  "tutorialPlaceTitle": "Төрт қазықты қамтыңыз",
+  "tutorialPlaceBody": "Бастапқы қазықты және белгіленген соңғы қазықты түртіңіз немесе екеуінің арасында сүйреңіз. Әр резеңке үш түзу бірлік қырды қамтиды.",
+  "tutorialConnectTitle": "Желіге жалғаңыз",
+  "tutorialConnectBody": "Алғашқы жүрістен кейін әр резеңке байланысқан желімен бір не бірнеше қазықта түйісуі керек.",
+  "tutorialCaptureTitle": "Үшбұрышты жабыңыз",
+  "tutorialCaptureBody": "Кіші үшбұрыштың үшінші қабырғасын аяқтап, белгі қойыңыз және ұпай алыңыз. Бір резеңке бірнешеуін жабуы мүмкін.",
+  "tutorialWinTitle": "Алаңды оқыңыз",
+  "tutorialWinBody": "Қорды бақылап, келешек иеленуді қорғаңыз және қарсыласқа үлкен жауап қалдырмаңыз. Ең жоғары қорытынды ұпай жеңеді.",
+  "previousStep": "Алдыңғы",
+  "nextStep": "Келесі",
+  "startPractice": "Жаттығуды бастау",
+  "tutorialBotName": "Жаттығу боты",
+  "tutorialGameFirstMove": "Алғашқы жүрісті алаңның кез келген жерінде жасап көріңіз.",
+  "tutorialGameConnected": "Енді әр жаңа резеңкені желіге жалғаңыз.",
+  "tutorialGameCapture": "Екі қабырғасы дайын үшбұрыштарды іздеңіз.",
+  "statisticsTitle": "Статистика",
+  "clearStatistics": "Статистиканы тазалау",
+  "clearStatisticsConfirmation": "Жергілікті және желілік статистиканың бәрін жою керек пе? Қайталаулар сақталады.",
+  "clearAction": "Тазалау",
+  "localStatistics": "Жергілікті ойындар",
+  "lanStatistics": "Желілік ойындар",
+  "matchesPlayed": "Ойналған ойын",
+  "wins": "Жеңіс",
+  "winRate": "Жеңіс үлесі",
+  "capturedTrianglesStat": "Иеленген үшбұрыш",
+  "largestMultiCapture": "Ең үлкен көптік иелену",
+  "averageScore": "Орташа ұпай",
+  "winRateByBotLevel": "Бот деңгейі бойынша жеңіс",
+  "replayLibraryTitle": "Қайталаулар",
+  "noReplaysTitle": "Сақталған қайталау жоқ",
+  "noReplaysDescription": "Ойынды аяқтағанда тексерілген жүрістер тарихы осында пайда болады.",
+  "localMode": "Жергілікті",
+  "lanMode": "Желі",
+  "replayMoveCount": "{count} жүріс",
+  "@replayMoveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "replayActions": "Қайталау әрекеттері",
+  "playReplay": "Қайталауды ойнату",
+  "deleteReplay": "Қайталауды жою",
+  "aboutTitle": "Қолданба туралы",
+  "appVersion": "{version} нұсқасы",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutOriginalWork": "Flutter және Flame негізіндегі, өзіндік көріністері мен арнайы жасалған дыбыстары бар түпнұсқа стратегиялық ойын.",
+  "privacyTitle": "Құпиялық",
+  "privacyBody": "TriGrid интернетсіз жұмыс істейді. Ойындар, баптаулар, статистика, қайталаулар және желіге қайта қосылу деректері осы құрылғыда қалады. Желілік ойын деректерді тек бөлмедегі құрылғыларға жібереді және сыртқы сервер қолданбайды.",
+  "thirdPartyLicenses": "Ашық код лицензиялары",
+  "thirdPartyLicensesDescription": "Flutter және қосылған пакеттер лицензияларын көру.",
+  "assetCreditsBody": "Қолданбадағы дыбыс жинағы TriGrid үшін арнайы жасалған. Дереккөздер мен ауыстыру нұсқаулары ASSET_LICENSES.md файлында жазылған.",
+  "turnTimerLabel": "Жүріс таймері",
+  "turnTimerOff": "Өшірулі",
+  "turnTimerSeconds": "{seconds} секунд",
+  "@turnTimerSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "turnTimerCompact": "{seconds} с",
+  "@turnTimerCompact": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "networkIntegrityError": "Ойын күйін тексеру сәтсіз. Хостың жарамды көшірмесі күтілуде.",
+  "networkStateResynchronized": "Ойын күйі хостпен қауіпсіз қайта синхрондалды.",
+  "networkReconnectFailed": "Хостқа қайта қосылу мүмкін болмады. Жергілікті желіні тексеріңіз.",
+  "networkUnexpectedError": "Хост бұл желілік әрекетті қабылдамады.",
+  "networkHostEndedTitle": "Хост ойынды аяқтады",
+  "networkHostEndedDescription": "Соңғы тексерілген орын — {revision}-нұсқа. Оны осы құрылғыда сақтауға болады.",
+  "@networkHostEndedDescription": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "saveLastPosition": "Соңғы орынды сақтау",
+  "exitToMenu": "Мәзірге шығу",
+  "networkSnapshotSaved": "Соңғы тексерілген желілік орын сақталды.",
+  "networkSnapshotSaveFailed": "Бұл желілік орынды тексеру немесе сақтау мүмкін болмады.",
+  "savedLanPosition": "Сақталған желілік орын",
+  "deleteSavedPosition": "Сақталған орынды жою",
+  "networkRevision": "{revision}-нұсқа",
+  "@networkRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "hostAddressExample": "192.168.1.10",
+  "lanPermissionTitle": "Жергілікті желіге рұқсат беру",
+  "lanPermissionDescription": "Қазіргі Android нұсқаларында бөлмелерді тауып, Wi-Fi арқылы қосылу үшін TriGrid-ке «Маңайдағы құрылғылар» рұқсаты қажет. Іздеу істемесе, жалғастырып, IP мекенжайын қолмен енгізуге болады.",
+  "openSystemSettings": "Баптауларды ашу",
+  "continueAction": "Жалғастыру",
+  "debugDiagnosticsTooltip": "Жөндеу диагностикасы",
+  "debugFps": "FPS {value}",
+  "@debugFps": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugFrameTime": "Кадр {value} мс",
+  "@debugFrameTime": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugLegalMoves": "Заңды {count}",
+  "@debugLegalMoves": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugBotNodes": "Түйін {count}",
+  "@debugBotNodes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugLanLatency": "Желі {value}",
+  "@debugLanLatency": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRevision": "{revision}-нұсқа",
+  "@debugRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "debugStateHash": "Хэш {value}",
+  "@debugStateHash": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

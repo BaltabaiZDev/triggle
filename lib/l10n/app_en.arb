@@ -1,0 +1,496 @@
+{
+  "@@locale": "en",
+  "appTitle": "TriGrid",
+  "appTagline": "A tactile strategy game of lines, links, and captured triangles.",
+  "boardPreviewLabel": "A miniature triangular peg board",
+  "playOnOnePhone": "Play on one phone",
+  "mainMenuLocalDescription": "Create a pass-and-play match for two to four players.",
+  "localGameSetupTitle": "Local game",
+  "localGameSetupSubtitle": "Choose the board and pass this device between turns.",
+  "playerCountLabel": "Players",
+  "boardSizeLabel": "Game board",
+  "rulesetLabel": "Rules",
+  "boardSizeSmall": "Small",
+  "boardSizeClassic": "Classic",
+  "boardSizeLarge": "Large",
+  "boardSizeHuge": "Huge",
+  "boardSizeCustom": "Custom",
+  "classicRules": "Classic rules",
+  "customRules": "Custom rules",
+  "customRadiusLabel": "Radius {radius}",
+  "@customRadiusLabel": {
+    "placeholders": {
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "startMatch": "Start match",
+  "playerDefaultName": "Player {number}",
+  "@playerDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "turnLabel": "Turn",
+  "scoreLabel": "Score {count}",
+  "@scoreLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bandsRemainingLabel": "{count} bands",
+  "@bandsRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markersRemainingLabel": "{count} markers",
+  "@markersRemainingLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pauseGame": "Pause",
+  "resumeGame": "Resume",
+  "restartMatch": "Restart",
+  "backToSetup": "Back to setup",
+  "moveBoard": "Move board",
+  "resetCamera": "Reset camera",
+  "showHint": "Show a legal move",
+  "chooseStartPeg": "Tap a peg or drag from one to place a band.",
+  "chooseEndPeg": "Choose one of the highlighted ending pegs.",
+  "hintShown": "A legal move is highlighted.",
+  "invalidPlacement": "That band cannot be placed here. Use a highlighted peg.",
+  "moveGameEnded": "The match has already ended.",
+  "moveDuplicateAction": "That action was already processed.",
+  "moveStaleRevision": "The board changed. Try the move again.",
+  "moveNotPlayersTurn": "It is another player's turn.",
+  "moveNoBandsRemaining": "This player has no bands remaining.",
+  "moveUnknownEndpoint": "Both ends must attach to pegs on the board.",
+  "moveWrongAxis": "Bands must follow one of the three grid directions.",
+  "moveWrongLength": "A band must span exactly four consecutive pegs.",
+  "moveOutsideBoard": "The complete band must stay inside the board.",
+  "moveDuplicateBand": "That exact band is already on the board.",
+  "moveAddsNoEdge": "This band would not add a new edge.",
+  "moveNotConnected": "The band must touch the existing network.",
+  "capturedTriangles": "Captured {count} triangle(s).",
+  "@capturedTriangles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePaused": "Game paused",
+  "gamePausedDescription": "Board input is disabled until you resume.",
+  "matchResultTitle": "Match complete",
+  "winnerName": "{name} wins!",
+  "@winnerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tiedWinners": "Tie: {names}",
+  "@tiedWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "resultMarkerLimit": "Marker limit reached",
+  "resultBandsExhausted": "All bands were played",
+  "resultNoLegalMoves": "No legal moves remain",
+  "finalScores": "Final scores",
+  "settingsTitle": "Sound & motion",
+  "musicVolume": "Music",
+  "soundEffectsVolume": "Sound effects",
+  "ambientVolume": "Ambience",
+  "muteAll": "Mute all audio",
+  "haptics": "Haptic feedback",
+  "reducedMotion": "Reduce motion",
+  "reducedMotionDescription": "Use instant transitions and disable camera effects.",
+  "particles": "Particles & confetti",
+  "screenShake": "Capture shake",
+  "animationSpeed": "Animation speed",
+  "replayMatch": "Replay match",
+  "replayingMatch": "Replaying the accepted moves…",
+  "seatSetupTitle": "Players & bots",
+  "humanPlayer": "Human player",
+  "botPlayer": "Bot player",
+  "botDifficultyLabel": "Bot difficulty",
+  "botPersonalityLabel": "Bot personality",
+  "botThinkingTime": "Thinking time: {milliseconds} ms",
+  "@botThinkingTime": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "botDifficultyBeginner": "Beginner",
+  "botDifficultyEasy": "Easy",
+  "botDifficultyNormal": "Normal",
+  "botDifficultyHard": "Hard",
+  "botDifficultyExpert": "Expert",
+  "botPersonalityAggressive": "Aggressive",
+  "botPersonalityDefensive": "Defensive",
+  "botPersonalityBalanced": "Balanced",
+  "botVsBotDebug": "Set all seats to bots",
+  "botThinkingPlayer": "{name} is thinking…",
+  "@botThinkingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "passDeviceTitle": "Pass the device",
+  "passDeviceDescription": "Hand the device to {name}. The board is hidden until they are ready.",
+  "@passDeviceDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "readyForTurn": "I’m ready",
+  "connectionLatency": "LAN {milliseconds} ms",
+  "@connectionLatency": {
+    "placeholders": {
+      "milliseconds": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionReconnecting": "Reconnecting…",
+  "connectionDisconnected": "Disconnected",
+  "connectionIncompatible": "Incompatible version",
+  "connectionClosed": "Connection closed",
+  "networkGamePaused": "LAN match paused",
+  "networkWaitingFor": "Waiting for {names} to reconnect.",
+  "@networkWaitingFor": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "networkPlayerReconnected": "Everyone is connected. The host can resume.",
+  "networkHostWillDecide": "The host can wait, remove the player, or replace them with a bot.",
+  "replaceWithBot": "Replace with bot",
+  "removePlayer": "Remove player",
+  "lanPlay": "Local network",
+  "lanDescription": "Play together over the same Wi-Fi or one phone’s hotspot.",
+  "lanMenuTitle": "LAN multiplayer",
+  "hostRoom": "Create a game",
+  "joinRoom": "Join a game",
+  "hostSetupTitle": "Create LAN game",
+  "joinSetupTitle": "Join LAN game",
+  "playerNameLabel": "Player name",
+  "roomNameLabel": "Room name",
+  "roomDefaultName": "{name}’s room",
+  "@roomDefaultName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "createRoom": "Create room",
+  "discoveredRooms": "Nearby rooms",
+  "scanningNetwork": "Scanning the local network…",
+  "manualJoin": "Manual IP",
+  "hostAddressLabel": "Host address",
+  "portLabel": "Port",
+  "roomCodeLabel": "Room code",
+  "scanQr": "Scan QR code",
+  "connectToRoom": "Connect",
+  "lanConnectionFailed": "Could not connect to the LAN room. Check the address, code, and Wi-Fi.",
+  "discoveryUnavailable": "Automatic discovery is unavailable. Manual IP and QR joining still work.",
+  "qrScannerTitle": "Scan room QR",
+  "qrInstruction": "Point the camera at the QR code on the host device.",
+  "invalidRoomQr": "That is not a compatible TriGrid room code.",
+  "lobbyTitle": "Game lobby",
+  "roomCodeDisplay": "Room code: {code}",
+  "@roomCodeDisplay": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "hostAddressDisplay": "Host: {address}:{port}",
+  "@hostAddressDisplay": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      },
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "playersConnected": "{count} of 4 seats filled",
+  "@playersConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hostBadge": "Host",
+  "readyStatus": "Ready",
+  "notReadyStatus": "Not ready",
+  "connectedStatus": "Connected",
+  "disconnectedStatus": "Disconnected",
+  "openSeat": "Open seat",
+  "addBot": "Add bot",
+  "removeSeat": "Remove seat",
+  "botDefaultName": "Bot {number}",
+  "@botDefaultName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForPlayers": "Waiting for every human player to connect and mark ready.",
+  "startLanMatch": "Start LAN match",
+  "playerColorLabel": "Player color",
+  "playerColorMoss": "Moss circle",
+  "playerColorCoral": "Coral diamond",
+  "playerColorBlue": "Blue triangle",
+  "playerColorGold": "Gold square",
+  "savedLanMatch": "Saved LAN seat",
+  "reconnectSavedLan": "Reconnect",
+  "forgetSavedLan": "Forget",
+  "continueMatch": "Continue",
+  "soloPlay": "Solo vs bots",
+  "soloSetupTitle": "Solo game",
+  "soloSetupSubtitle": "Choose your opponents, bot strength, and game board.",
+  "confirmMoveTitle": "Place this band?",
+  "confirmMoveDescription": "The move becomes final as soon as it is accepted.",
+  "placeBand": "Place band",
+  "appSettingsTitle": "Settings",
+  "profileAndLanguage": "Player & language",
+  "languageLabel": "Language",
+  "languageSystem": "Device language",
+  "languageEnglish": "English",
+  "languageKazakh": "Kazakh",
+  "languageRussian": "Russian",
+  "appearanceTitle": "Appearance",
+  "themeLabel": "Theme",
+  "themeSystem": "Follow device",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "highContrast": "High contrast",
+  "highContrastDescription": "Use stronger borders and text contrast.",
+  "playerSymbolsTitle": "Color-independent markers",
+  "playerSymbolsDescription": "Every player always has a unique circle, diamond, triangle, or square in addition to color.",
+  "audioTitle": "Audio & haptics",
+  "accessibilityTitle": "Motion & input",
+  "confirmMoves": "Confirm each move",
+  "confirmMovesDescription": "Ask before submitting a selected band. LAN moves are still final after host acceptance.",
+  "rulesTitle": "Rules",
+  "rulesIntro": "TriGrid is played on a triangular lattice inside a hexagon. Build one connected network of bands and claim the small triangles you complete.",
+  "rulesGoalTitle": "Goal",
+  "rulesGoalBody": "Capture more unit triangles than every opponent. Score is the number of triangles carrying your marker.",
+  "rulesPlacementTitle": "Place a band",
+  "rulesPlacementBody": "A move spans exactly four consecutive aligned pegs—three unit edges—along one of the lattice’s three axes. It must stay on the board and add at least one unused edge.",
+  "rulesConnectionTitle": "Keep it connected",
+  "rulesConnectionBody": "The first band may go anywhere. Every later band must share at least one peg with the existing network. Exact duplicate bands are not allowed; useful partial overlap is allowed.",
+  "rulesCaptureTitle": "Capture triangles",
+  "rulesCaptureBody": "When your new band completes the third boundary of an unclaimed unit triangle, you capture it immediately. One move can capture several triangles.",
+  "rulesEndingTitle": "End and winner",
+  "rulesEndingBody": "The match ends at the marker limit, after the available bands are used, or when no legal move remains. Highest score wins; tied top scores produce a tie.",
+  "rulesBoardsTitle": "Boards and supplies",
+  "rulesBoardsBody": "Classic is radius 3 with 37 pegs and 54 triangles. Two players receive 10 bands each; three or four receive 12. Other board sizes use clearly marked custom supply scaling.",
+  "botGuideTitle": "Bot strengths",
+  "botGuideIntro": "All bots obey the same rules and only see public game state. Higher levels evaluate more replies and defensive consequences; difficulty is not just a delay.",
+  "botBeginnerDescription": "Mostly random legal play with occasional immediate captures. Fast and intentionally forgiving.",
+  "botEasyDescription": "Prefers captures and avoids simple gifts, using a shallow tactical evaluation.",
+  "botNormalDescription": "Balances score, triangles offered to the next player, connections, and blocking with limited lookahead.",
+  "botHardDescription": "Uses time-bounded iterative deepening, move ordering, caching, and multiplayer search.",
+  "botExpertDescription": "Searches more deeply within its budget and weighs traps, multi-captures, defense, and opponent responses.",
+  "botPersonalitiesTitle": "Personalities",
+  "botPersonalitiesDescription": "Aggressive values immediate captures, Defensive reduces opportunities for the next player, and Balanced combines both priorities.",
+  "tutorialTitle": "Tutorial",
+  "tutorialPlaceTitle": "Stretch across four pegs",
+  "tutorialPlaceBody": "Tap a starting peg and a highlighted ending peg, or drag between them. Every band covers exactly three straight unit edges.",
+  "tutorialConnectTitle": "Join the network",
+  "tutorialConnectBody": "After the first move, every band must touch the connected network at one or more pegs.",
+  "tutorialCaptureTitle": "Close a triangle",
+  "tutorialCaptureBody": "Complete the third side of a small triangle to place your marker and score. A clever band may close several at once.",
+  "tutorialWinTitle": "Read the board",
+  "tutorialWinBody": "Watch supplies, protect future captures, and avoid offering a large reply. The highest final score wins.",
+  "previousStep": "Previous",
+  "nextStep": "Next",
+  "startPractice": "Start practice",
+  "tutorialBotName": "Practice bot",
+  "tutorialGameFirstMove": "Try a first move anywhere on the board.",
+  "tutorialGameConnected": "Now keep every new band connected to the network.",
+  "tutorialGameCapture": "Look for triangles with two completed sides.",
+  "statisticsTitle": "Statistics",
+  "clearStatistics": "Clear statistics",
+  "clearStatisticsConfirmation": "Remove every local and LAN statistic? Saved replays are kept.",
+  "clearAction": "Clear",
+  "localStatistics": "Local matches",
+  "lanStatistics": "LAN matches",
+  "matchesPlayed": "Matches played",
+  "wins": "Wins",
+  "winRate": "Win rate",
+  "capturedTrianglesStat": "Triangles captured",
+  "largestMultiCapture": "Largest multi-capture",
+  "averageScore": "Average score",
+  "winRateByBotLevel": "Win rate by bot level",
+  "replayLibraryTitle": "Replays",
+  "noReplaysTitle": "No saved replays",
+  "noReplaysDescription": "Complete a match and its verified action history will appear here.",
+  "localMode": "Local",
+  "lanMode": "LAN",
+  "replayMoveCount": "{count} moves",
+  "@replayMoveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "replayActions": "Replay actions",
+  "playReplay": "Play replay",
+  "deleteReplay": "Delete replay",
+  "aboutTitle": "About",
+  "appVersion": "Version {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutOriginalWork": "An original Flutter and Flame strategy game with original visuals, generated sounds, and no copied game assets.",
+  "privacyTitle": "Privacy",
+  "privacyBody": "TriGrid works offline. Local matches, settings, statistics, replays, and LAN reconnect credentials stay on this device. LAN play sends game data only to devices in the room and uses no remote gameplay server.",
+  "thirdPartyLicenses": "Open-source licenses",
+  "thirdPartyLicensesDescription": "View licenses for Flutter and included packages.",
+  "assetCreditsBody": "The shipped sound pack is generated specifically for TriGrid. Asset origins and replacement instructions are recorded in ASSET_LICENSES.md.",
+  "turnTimerLabel": "Turn timer",
+  "turnTimerOff": "Off",
+  "turnTimerSeconds": "{seconds} seconds",
+  "@turnTimerSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "turnTimerCompact": "{seconds}s",
+  "@turnTimerCompact": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "networkIntegrityError": "State verification failed. Waiting for a valid host snapshot.",
+  "networkStateResynchronized": "Game state was safely resynchronized with the host.",
+  "networkReconnectFailed": "Could not reconnect to the host. Check the local network.",
+  "networkUnexpectedError": "The host rejected that network operation.",
+  "networkHostEndedTitle": "The host ended the match",
+  "networkHostEndedDescription": "The last verified position is revision {revision}. You can save it on this device.",
+  "@networkHostEndedDescription": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "saveLastPosition": "Save last position",
+  "exitToMenu": "Exit to menu",
+  "networkSnapshotSaved": "Last verified LAN position saved.",
+  "networkSnapshotSaveFailed": "That LAN position could not be verified or saved.",
+  "savedLanPosition": "Saved LAN position",
+  "deleteSavedPosition": "Delete saved position",
+  "networkRevision": "Revision {revision}",
+  "@networkRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "hostAddressExample": "192.168.1.10",
+  "lanPermissionTitle": "Allow local network access",
+  "lanPermissionDescription": "TriGrid needs Nearby devices access on modern Android versions to discover rooms and connect over Wi-Fi. You can continue and use manual IP if discovery is unavailable.",
+  "openSystemSettings": "Open settings",
+  "continueAction": "Continue",
+  "debugDiagnosticsTooltip": "Debug diagnostics",
+  "debugFps": "FPS {value}",
+  "@debugFps": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugFrameTime": "Frame {value} ms",
+  "@debugFrameTime": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugLegalMoves": "Legal {count}",
+  "@debugLegalMoves": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugBotNodes": "Nodes {count}",
+  "@debugBotNodes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugLanLatency": "LAN {value}",
+  "@debugLanLatency": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRevision": "Rev {revision}",
+  "@debugRevision": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "debugStateHash": "Hash {value}",
+  "@debugStateHash": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}
