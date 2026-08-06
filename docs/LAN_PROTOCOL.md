@@ -80,10 +80,10 @@ The host assigns an empty seat and returns `joinAccepted`:
 ```
 
 `sessionToken` is a random, room-scoped bearer secret. It is never present in
-UDP advertisements or QR codes. The client persists the WebSocket URL, player
-name, room code, player ID, token, match ID, last state revision, last hash, and
-save time. A reconnect repeats `joinRequest` with the saved token. Unknown
-tokens are rejected with `invalid_session_token`; they never create a new seat.
+UDP advertisements or QR codes. The active client keeps it only in memory and
+uses it to reconnect while the same game screen is alive. It is not shown as a
+saved room after leaving the session or restarting the app. Unknown tokens are
+rejected with `invalid_session_token`; they never create a new seat.
 
 On a valid reconnect, the host closes an older socket using the same player
 identity, marks the seat connected, and returns the current lobby, full game
@@ -103,8 +103,10 @@ state, and hash. It also follows with a `stateSnapshot`.
 
 Only the authenticated host player may update the room, manage seats, start the
 match, or resolve a disconnect. Each human may set their own ready state and
-choose an unused color/shape. Host readiness is always true. Non-Classic board
-sizes force the `custom` ruleset.
+choose an unused color/shape. Host readiness is always true. The board now
+determines the supply policy: the Classic board always uses the canonical
+`classic` supplies, while every other board size uses automatically scaled
+`custom` supplies. There is no separate ruleset choice in the lobby UI.
 
 `updateSeat` operations are:
 
@@ -214,15 +216,19 @@ Valid decisions are:
 - `replace`: convert the disconnected player to a Normal/Balanced host bot;
 - `remove`: exhaust that player's bands, skip them when necessary, and resume.
 
-The app saves reconnect metadata when backgrounded and attempts token
-reconnection when foregrounded after a lost socket. Five attempts use bounded
-timeouts and increasing delays. Hash-verified full state replaces any stale
-client state.
+Before a match starts, a departing guest is removed from the lobby immediately
+and their room-scoped reconnect token is invalidated, so the seat becomes
+available to another player. Match-time seats remain reserved because their
+verified game state must support reconnect or a host decision.
+
+The app attempts an in-memory token reconnect when foregrounded after a lost
+socket. Five attempts use bounded timeouts and increasing delays. Hash-verified
+full state replaces any stale client state.
 
 Host migration is not part of version 1. A deliberate host shutdown broadcasts
-`hostEnded`; clients show a terminal network error and discard the now-invalid
-token. The terminal surface lets the player archive the last hash-verified
-position separately from the session credential.
+`hostEnded`; clients treat the closure as final and never start the temporary
+network-loss retry loop. The terminal surface can still archive the last
+hash-verified position separately from the expired room.
 
 An optional 10–300 second turn timer is configured by the host and serialized
 in both lobby and match settings. Only the authoritative host owns expiry. On a
@@ -258,22 +264,30 @@ every 1.4 seconds and also answers an explicit probe:
 }
 ```
 
-Browsers discard advertisements with another protocol version. Bonjour rooms
-remain until the native service-lost event; UDP-only rooms are pruned after
-five seconds without an advertisement. If routers block discovery or local
-network permission is denied, manual IP and QR joining remain available once
-the OS grants the connection itself.
+Browsers discard advertisements with another protocol version. A closing host
+broadcasts a `trigrid_room_closed_v1` departure packet. UDP-observed rooms are
+also pruned after four seconds without an advertisement, even when a delayed
+Bonjour cache still lists them. Bonjour records are verified against the
+host's lightweight `GET /room` endpoint so an old service name cannot resolve
+to a newly created room that reused TCP port `42422`. A UDP browser replaces
+the encoded host address with the datagram source address, and host address
+selection prefers Wi-Fi/hotspot or Ethernet interfaces over cellular, VPN, and
+virtual adapters.
+If routers block discovery or local network permission is denied, manual IP and
+QR joining remain available once the OS grants the connection itself.
 
 Version-1 QR payload:
 
 ```text
-trigrid://join?host=192.168.4.1&port=42422&code=ABC234&v=1
+trigrid://join?id=7942...&host=192.168.4.1&port=42422&code=ABC234&v=1
 ```
 
 The scanner accepts only the `trigrid://join` scheme, valid host/port/code
-fields, and the current protocol version. The encoded port is fixed at `42422`
-for version-1 rooms and is never requested from the player. No player token is
-encoded.
+fields, and the current protocol version. When the same room ID is already in
+nearby discovery, the scanner uses that resolved reachable address instead of
+a stale or wrong interface address embedded by an older host. The encoded port
+is fixed at `42422` for version-1 rooms and is never requested from the player.
+No player token is encoded.
 
 ## 8. Errors
 
@@ -313,11 +327,11 @@ iOS multicast entitlement; UDP remains only a fallback where allowed.
 Automated loopback integration covers room creation, join, lobby updates,
 ready/start, color selection, bot configuration, host-authoritative timeout,
 accepted/rejected/idempotent actions, incompatible credentials, disconnect
-pause, persistent-token reconnect, snapshot/hash restore, resume, and bot
+pause, in-memory token reconnect, snapshot/hash restore, resume, and bot
 replacement. A separate two-client test plays through a terminal match and
 requires both clients to agree with the host on every revision and final state
-hash. The game-screen lifecycle test also proves pause-time credential
-persistence and foreground token reconnection over real loopback WebSockets.
+hash. The game-screen lifecycle test also proves foreground token reconnection
+from the active session over real loopback WebSockets.
 
 Before store release, run the following physical matrix because a Windows
 loopback test cannot reproduce mobile multicast policy, router isolation, or

@@ -117,6 +117,13 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
                               }
                             },
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _boardPreset == BoardSizePreset.classic
+                          ? l10n.classicBoardDetails
+                          : l10n.scaledBoardDetails,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     if (_failed) ...[
                       const SizedBox(height: 12),
                       Text(

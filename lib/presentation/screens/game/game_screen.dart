@@ -45,6 +45,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   AppController? _appController;
   Timer? _turnTimer;
   int? _turnSecondsRemaining;
+  var _exiting = false;
 
   @override
   void initState() {
@@ -438,8 +439,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _exit() {
+  Future<void> _exit() async {
+    if (_exiting) {
+      return;
+    }
+    _exiting = true;
     _session.buttonPress();
+    final session = _session;
+    if (session is LanGameSessionController) {
+      await session.shutdown();
+    }
+    if (!mounted) {
+      return;
+    }
     Get.back<void>();
   }
 

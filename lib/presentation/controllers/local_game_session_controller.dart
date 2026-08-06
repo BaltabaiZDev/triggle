@@ -423,9 +423,10 @@ class LocalGameSessionController extends GetxController {
         ? const BoardPrompt.chooseStart()
         : BoardPrompt.captured(captured);
 
-    playFeedback(_feedback.elasticSnap());
     if (captured > 0) {
       playFeedback(_feedback.capture(captured));
+    } else {
+      playFeedback(_feedback.elasticSnap());
     }
     final result = transition.state.matchResult;
     if (result != null) {

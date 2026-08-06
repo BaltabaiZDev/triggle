@@ -83,6 +83,7 @@ class LanClientConnection {
   var _messageCounter = 0;
   var _lastHostSequence = -1;
   var _closed = false;
+  var _hostEnded = false;
 
   Stream<LanEnvelope> get messages => _messageController.stream;
 
@@ -173,7 +174,8 @@ class LanClientConnection {
           _latencyController.add(latencyMilliseconds);
           _send(LanMessageType.pong, {'sentAt': sentAt});
         case LanMessageType.hostEnded:
-          _setStatus(LanConnectionStatus.disconnected);
+          _hostEnded = true;
+          _setStatus(LanConnectionStatus.closed);
         case LanMessageType.gamePaused ||
             LanMessageType.gameResumed ||
             LanMessageType.pong ||
@@ -277,6 +279,10 @@ class LanClientConnection {
 
   void _handleDone() {
     if (_closed) {
+      return;
+    }
+    if (_hostEnded) {
+      _setStatus(LanConnectionStatus.closed);
       return;
     }
     _setStatus(LanConnectionStatus.disconnected);

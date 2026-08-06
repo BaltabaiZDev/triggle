@@ -56,14 +56,22 @@ void main() {
     final decoded = LanDiscoveryService.decodeAdvertisement(
       LanDiscoveryService.encodeAdvertisement(room),
     );
-    final link = LanJoinLink.parse(room.qrPayload);
+    final link = LanJoinLink.parse('  ${room.qrPayload}\n');
 
     expect(decoded?.roomId, room.roomId);
     expect(decoded?.websocketUrl, 'ws://192.168.4.1:4040/ws');
     expect(link.host, room.address);
     expect(link.port, room.port);
     expect(link.roomCode, room.roomCode);
+    expect(link.roomId, room.roomId);
     expect(link.protocolVersion, LanEnvelope.currentProtocolVersion);
+
+    final resolvedRoom = room.copyWith(address: '192.168.4.22');
+    expect(
+      link.resolveWebsocketUrl([resolvedRoom]),
+      'ws://192.168.4.22:4040/ws',
+    );
+    expect(link.resolveWebsocketUrl(const []), link.websocketUrl);
   });
 
   test('invalid discovery traffic and join links are ignored', () {
@@ -74,6 +82,17 @@ void main() {
     expect(
       () => LanJoinLink.parse('https://example.com/room'),
       throwsFormatException,
+    );
+  });
+
+  test('room departure packets expire the exact room generation', () {
+    final packet = LanDiscoveryService.encodeDeparture('closed-room-id');
+
+    expect(LanDiscoveryService.decodeDeparture(packet), 'closed-room-id');
+    expect(LanDiscoveryService.decodeAdvertisement(packet), isNull);
+    expect(
+      LanDiscoveryService.decodeDeparture(utf8.encode('not json')),
+      isNull,
     );
   });
 

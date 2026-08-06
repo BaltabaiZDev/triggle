@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:trigrid/core/ai/trigrid_ai.dart';
@@ -35,10 +36,9 @@ class LanHostServer {
     Duration? turnTimeoutOverride,
     BotMoveProvider botMoveProvider = const BotWorker(),
   }) async {
-    final server = await HttpServer.bind(
+    final server = await _bindServer(
       bindAddress ?? InternetAddress.anyIPv4,
       port,
-      shared: true,
     );
     final uuid = const Uuid();
     final roomId = uuid.v4();
@@ -133,6 +133,14 @@ class LanHostServer {
 
   Future<void> _serveRequests() async {
     await for (final request in _server) {
+      if (request.method == 'GET' && request.uri.path == '/room') {
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write(jsonEncode(advertisement.toJson()));
+        await request.response.close();
+        continue;
+      }
       if (request.uri.path != '/ws' ||
           !WebSocketTransformer.isUpgradeRequest(request)) {
         request.response
@@ -315,13 +323,13 @@ class LanHostServer {
       _sendError(context, 'reconnect_seat_missing');
       return;
     }
+    context.playerId = playerId;
+    context.sessionToken = sessionToken;
     for (final existing in _clients.values) {
       if (existing != context && existing.playerId == playerId) {
         unawaited(existing.socket.close(WebSocketStatus.goingAway));
       }
     }
-    context.playerId = playerId;
-    context.sessionToken = sessionToken;
     _replaceSeat(
       seatIndex,
       lobby.seats[seatIndex].copyWith(
@@ -396,7 +404,6 @@ class LanHostServer {
     final boardSize = BoardSize.fromJson(
       payload['boardSize']! as Map<String, Object?>,
     );
-    final requestedRules = Ruleset.values.byName(payload['ruleset']! as String);
     final turnTimeSeconds = payload['turnTimeSeconds'] as int?;
     if (turnTimeSeconds != null &&
         (turnTimeSeconds < 10 || turnTimeSeconds > 300)) {
@@ -404,7 +411,7 @@ class LanHostServer {
     }
     lobby = lobby.copyWith(
       boardSize: boardSize,
-      ruleset: boardSize.isClassic ? requestedRules : Ruleset.custom,
+      ruleset: boardSize.isClassic ? Ruleset.classic : Ruleset.custom,
       turnTimeSeconds: turnTimeSeconds,
       clearTurnTime: turnTimeSeconds == null,
       revision: lobby.revision + 1,
@@ -683,8 +690,17 @@ class LanHostServer {
     if (playerId == null) {
       return;
     }
+    if (_clients.values.any((client) => client.playerId == playerId)) {
+      return;
+    }
     final index = lobby.seats.indexWhere((seat) => seat.playerId == playerId);
     if (index < 0) {
+      return;
+    }
+    if (!lobby.started && playerId != lobby.hostPlayerId) {
+      _sessionTokens.remove(playerId);
+      _replaceSeat(index, LanSeat.empty(index));
+      _broadcastLobby();
       return;
     }
     _replaceSeat(index, lobby.seats[index].copyWith(connected: false));
@@ -946,24 +962,96 @@ class LanHostServer {
     await _gameController.close();
   }
 
+  static Future<HttpServer> _bindServer(
+    InternetAddress address,
+    int port,
+  ) async {
+    const attempts = 5;
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      try {
+        // A shared gameplay port can route a new connection to a server that
+        // is still shutting down. Exclusive binding keeps room generations
+        // isolated when a host immediately creates another room.
+        return await HttpServer.bind(address, port, shared: false);
+      } on SocketException {
+        if (port == 0 || attempt == attempts - 1) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 120 * (attempt + 1)));
+      }
+    }
+    throw StateError('Unable to bind LAN host port.');
+  }
+
   static Future<String> _bestLocalIpv4Address() async {
     try {
       final interfaces = await NetworkInterface.list(
         type: InternetAddressType.IPv4,
         includeLoopback: false,
       );
+      final candidates = <({String address, int score})>[];
       for (final interface in interfaces) {
         for (final address in interface.addresses) {
-          if (!address.isLoopback) {
-            return address.address;
+          final value = address.address;
+          if (address.isLoopback || _isLinkLocalIpv4(value)) {
+            continue;
           }
+          candidates.add((
+            address: value,
+            score: _interfaceScore(interface.name, value),
+          ));
         }
+      }
+      candidates.sort((first, second) => second.score.compareTo(first.score));
+      if (candidates.isNotEmpty) {
+        return candidates.first.address;
       }
     } on Object {
       // Manual IP entry remains available when interface enumeration fails.
     }
     return InternetAddress.loopbackIPv4.address;
   }
+
+  static int _interfaceScore(String interfaceName, String address) {
+    final name = interfaceName.toLowerCase();
+    var score = _isPrivateIpv4(address) ? 100 : 0;
+    if (name.contains('wlan') ||
+        name.contains('wifi') ||
+        name.contains('softap') ||
+        name.contains('hotspot') ||
+        name == 'ap0') {
+      score += 200;
+    } else if (name.startsWith('en') || name.startsWith('eth')) {
+      score += 160;
+    }
+    if (name.contains('rmnet') ||
+        name.contains('ccmni') ||
+        name.contains('pdp') ||
+        name.contains('tun') ||
+        name.contains('tap') ||
+        name.contains('vpn') ||
+        name.contains('virtual') ||
+        name.contains('vbox') ||
+        name.contains('docker')) {
+      score -= 300;
+    }
+    return score;
+  }
+
+  static bool _isPrivateIpv4(String address) {
+    final parts = address.split('.').map(int.tryParse).toList();
+    if (parts.length != 4 || parts.any((part) => part == null)) {
+      return false;
+    }
+    final first = parts[0]!;
+    final second = parts[1]!;
+    return first == 10 ||
+        (first == 172 && second >= 16 && second <= 31) ||
+        (first == 192 && second == 168);
+  }
+
+  static bool _isLinkLocalIpv4(String address) =>
+      address.startsWith('169.254.');
 
   static String _roomCode(String roomId) {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

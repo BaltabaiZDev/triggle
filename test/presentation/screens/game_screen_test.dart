@@ -89,7 +89,7 @@ void main() {
   });
 
   testWidgets(
-    'app lifecycle persists and reconnects an interrupted LAN session',
+    'app lifecycle reconnects an interrupted LAN session from memory',
     (tester) async {
       final host = (await tester.runAsync(
         () => LanHostServer.start(
@@ -145,12 +145,10 @@ void main() {
         ]);
       });
 
-      final reconnectStore = _CountingReconnectStore();
       final originalClient = connectedHostClient;
       final session = LanGameSessionController(
         client: originalClient,
         feedback: const NoopGameFeedback(),
-        reconnectStore: reconnectStore,
         disposeFeedbackOnClose: false,
       );
       await tester.pumpWidget(
@@ -173,20 +171,8 @@ void main() {
         ),
       );
       await tester.pump();
-      await _pumpUntil(
-        tester,
-        () => reconnectStore.saveCount > 0,
-        description: 'initial reconnect credentials to persist',
-      );
-
-      reconnectStore.saveCount = 0;
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      expect(
-        reconnectStore.saveCount,
-        greaterThan(0),
-        reason: 'Backgrounding must persist reconnect credentials.',
-      );
-      expect(reconnectStore.credentials?.playerId, originalClient.playerId);
+      await tester.pump();
 
       var lifecycleTriggeredReconnect = false;
       final reconnected = await tester.runAsync(() async {
@@ -233,42 +219,10 @@ void main() {
   );
 }
 
-Future<void> _pumpUntil(
-  WidgetTester tester,
-  bool Function() predicate, {
-  required String description,
-}) async {
-  final deadline = DateTime.now().add(const Duration(seconds: 5));
-  while (!predicate() && DateTime.now().isBefore(deadline)) {
-    await tester.pump(const Duration(milliseconds: 20));
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-  }
-  expect(predicate(), isTrue, reason: 'Timed out waiting for $description.');
-}
-
 Future<bool> _waitUntilAsync(bool Function() predicate) async {
   final deadline = DateTime.now().add(const Duration(seconds: 5));
   while (!predicate() && DateTime.now().isBefore(deadline)) {
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
   return predicate();
-}
-
-class _CountingReconnectStore implements LanReconnectStore {
-  LanReconnectCredentials? credentials;
-  var saveCount = 0;
-
-  @override
-  Future<void> clear() async {
-    credentials = null;
-  }
-
-  @override
-  Future<LanReconnectCredentials?> load() async => credentials;
-
-  @override
-  Future<void> save(LanReconnectCredentials credentials) async {
-    this.credentials = credentials;
-    saveCount++;
-  }
 }

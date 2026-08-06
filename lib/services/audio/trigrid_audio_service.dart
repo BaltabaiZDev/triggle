@@ -28,12 +28,19 @@ class TriGridAudioService {
   static const musicAsset = 'music_loop.wav';
   static const ambientAsset = 'ambient_loop.wav';
   static const _continuousBackgroundAudioEnabled = false;
+  static const _pooledSounds = <GameSound>{
+    GameSound.elasticSnap,
+    GameSound.triangleCapture,
+    GameSound.captureCombo,
+    GameSound.turnChange,
+  };
 
   late final Bgm _music = Bgm(audioCache: FlameAudio.audioCache);
   late final Bgm _ambient = Bgm(audioCache: FlameAudio.audioCache);
   var _settings = GameFeelSettings();
   var _initialized = false;
   Future<void>? _initialization;
+  final Map<GameSound, AudioPool> _pools = {};
 
   Future<void> initialize(GameFeelSettings settings) async {
     _settings = settings;
@@ -60,6 +67,17 @@ class TriGridAudioService {
     await FlameAudio.audioCache.loadAll(
       GameSound.values.map((sound) => sound.assetName).toList(),
     );
+    for (final sound in _pooledSounds) {
+      try {
+        _pools[sound] = await FlameAudio.createPool(
+          sound.assetName,
+          minPlayers: 1,
+          maxPlayers: 3,
+        );
+      } on Object {
+        // Static playback remains as a safe fallback on unsupported devices.
+      }
+    }
     if (_continuousBackgroundAudioEnabled) {
       await FlameAudio.audioCache.loadAll([musicAsset, ambientAsset]);
       await _music.initialize();
@@ -88,10 +106,17 @@ class TriGridAudioService {
     if (volume <= 0) {
       return;
     }
+    final pool = _pools[sound];
+    if (pool != null) {
+      await pool.start(volume: volume);
+      return;
+    }
     await FlameAudio.play(sound.assetName, volume: volume);
   }
 
   Future<void> dispose() async {
+    await Future.wait(_pools.values.map((pool) => pool.dispose()));
+    _pools.clear();
     if (_continuousBackgroundAudioEnabled) {
       await Future.wait([_music.dispose(), _ambient.dispose()]);
     }

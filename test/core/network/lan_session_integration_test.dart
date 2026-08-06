@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -131,10 +132,7 @@ void main() {
     final move = GameEngine(
       initial.settings,
     ).validator.legalMoves(initial).first;
-    gameSession = LanGameSessionController(
-      client: hostClient,
-      reconnectStore: _MemoryReconnectStore(),
-    );
+    gameSession = LanGameSessionController(client: hostClient);
     gameSession.onInit();
     final hostAccepted = hostClient.messages.firstWhere(
       (message) => message.type == LanMessageType.actionAccepted,
@@ -386,23 +384,156 @@ void main() {
     expect(host.gameState?.revision, 1);
     expect(host.gameState?.currentPlayer.id, guest.playerId);
   });
-}
 
-class _MemoryReconnectStore implements LanReconnectStore {
-  LanReconnectCredentials? credentials;
+  test(
+    'guest leaving before the match immediately releases the seat',
+    () async {
+      final host = await LanHostServer.start(
+        hostName: 'Host',
+        port: 0,
+        bindAddress: InternetAddress.loopbackIPv4,
+        advertisedAddress: InternetAddress.loopbackIPv4.address,
+      );
+      LanClientConnection? hostClient;
+      LanClientConnection? guest;
+      LanClientConnection? replacement;
+      addTearDown(() async {
+        await hostClient?.close();
+        await guest?.close();
+        await replacement?.close();
+        await host.close();
+      });
 
-  @override
-  Future<void> clear() async {
-    credentials = null;
-  }
+      hostClient = await LanClientConnection.connect(
+        websocketUrl: host.loopbackWebsocketUrl,
+        playerName: 'Host',
+        roomCode: host.lobby.roomCode,
+        sessionToken: host.hostSessionToken,
+      );
+      guest = await LanClientConnection.connect(
+        websocketUrl: host.loopbackWebsocketUrl,
+        playerName: 'Leaving guest',
+        roomCode: host.lobby.roomCode,
+      );
+      final leavingPlayerId = guest.playerId;
+      expect(host.lobby.occupiedSeatCount, 2);
 
-  @override
-  Future<LanReconnectCredentials?> load() async => credentials;
+      final seatReleased = host.lobbyChanges.firstWhere(
+        (lobby) =>
+            lobby.occupiedSeatCount == 1 &&
+            lobby.seats.every((seat) => seat.playerId != leavingPlayerId),
+      );
+      await guest.close();
+      await seatReleased.timeout(const Duration(seconds: 3));
 
-  @override
-  Future<void> save(LanReconnectCredentials credentials) async {
-    this.credentials = credentials;
-  }
+      expect(host.lobby.occupiedSeatCount, 1);
+      expect(host.lobby.seats[1].isOccupied, isFalse);
+      replacement = await LanClientConnection.connect(
+        websocketUrl: host.loopbackWebsocketUrl,
+        playerName: 'Replacement',
+        roomCode: host.lobby.roomCode,
+      );
+      expect(host.lobby.occupiedSeatCount, 2);
+      expect(host.lobby.seats[1].playerId, replacement.playerId);
+    },
+  );
+
+  test(
+    'host shutdown is final and exposes only the live room generation',
+    () async {
+      final host = await LanHostServer.start(
+        hostName: 'Host',
+        port: 0,
+        bindAddress: InternetAddress.loopbackIPv4,
+        advertisedAddress: InternetAddress.loopbackIPv4.address,
+      );
+      LanClientConnection? guest;
+      addTearDown(() async {
+        await guest?.close();
+        await host.close();
+      });
+
+      final http = HttpClient();
+      final request = await http.getUrl(
+        Uri.parse('http://127.0.0.1:${host.port}/room'),
+      );
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+      http.close(force: true);
+      final advertised = LanRoomAdvertisement.fromJson(
+        jsonDecode(body) as Map<String, Object?>,
+      );
+      expect(advertised.roomId, host.lobby.roomId);
+      expect(advertised.roomCode, host.lobby.roomCode);
+
+      guest = await LanClientConnection.connect(
+        websocketUrl: host.loopbackWebsocketUrl,
+        playerName: 'Guest',
+        roomCode: host.lobby.roomCode,
+      );
+      final ended = guest.messages.firstWhere(
+        (message) => message.type == LanMessageType.hostEnded,
+      );
+      final closed = guest.statusChanges.firstWhere(
+        (status) => status == LanConnectionStatus.closed,
+      );
+
+      await host.close();
+      await Future.wait([
+        ended.timeout(const Duration(seconds: 3)),
+        closed.timeout(const Duration(seconds: 3)),
+      ]);
+      expect(guest.status, LanConnectionStatus.closed);
+    },
+  );
+
+  test('host board selection determines the lobby supply policy', () async {
+    final host = await LanHostServer.start(
+      hostName: 'Host',
+      port: 0,
+      bindAddress: InternetAddress.loopbackIPv4,
+      advertisedAddress: InternetAddress.loopbackIPv4.address,
+    );
+    LanClientConnection? hostClient;
+    addTearDown(() async {
+      await hostClient?.close();
+      await host.close();
+    });
+
+    hostClient = await LanClientConnection.connect(
+      websocketUrl: host.loopbackWebsocketUrl,
+      playerName: 'Host',
+      roomCode: host.lobby.roomCode,
+      sessionToken: host.hostSessionToken,
+    );
+
+    final classicRevision = host.lobby.revision;
+    final classicNormalized = host.lobbyChanges.firstWhere(
+      (lobby) => lobby.revision > classicRevision,
+    );
+    hostClient.updateRoom(
+      boardSize: BoardSize.fromPreset(BoardSizePreset.classic),
+      ruleset: Ruleset.custom,
+    );
+    expect(
+      (await classicNormalized.timeout(const Duration(seconds: 3))).ruleset,
+      Ruleset.classic,
+    );
+
+    final scaledRevision = host.lobby.revision;
+    final scaledNormalized = host.lobbyChanges.firstWhere(
+      (lobby) => lobby.revision > scaledRevision,
+    );
+    hostClient.updateRoom(
+      boardSize: BoardSize.fromPreset(BoardSizePreset.large),
+      ruleset: Ruleset.classic,
+    );
+    final scaledLobby = await scaledNormalized.timeout(
+      const Duration(seconds: 3),
+    );
+    expect(scaledLobby.ruleset, Ruleset.custom);
+    expect(scaledLobby.boardSize.preset, BoardSizePreset.large);
+  });
 }
 
 class _FirstLegalBot implements BotMoveProvider {

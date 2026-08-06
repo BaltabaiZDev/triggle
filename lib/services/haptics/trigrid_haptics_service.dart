@@ -11,6 +11,15 @@ class TriGridHapticsService {
     _settings = settings;
   }
 
+  Future<void> initialize(GameFeelSettings settings) async {
+    updateSettings(settings);
+    if (settings.haptics) {
+      // Capability discovery is a platform call. Doing it during app startup
+      // keeps the first accepted move from waiting on Android's vibrator API.
+      _available ??= await Vibration.hasVibrator();
+    }
+  }
+
   Future<void> play(GameHaptic haptic) async {
     if (!_settings.haptics) {
       return;

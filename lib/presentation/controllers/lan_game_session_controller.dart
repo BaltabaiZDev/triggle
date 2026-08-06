@@ -15,10 +15,8 @@ class LanGameSessionController extends LocalGameSessionController {
     this.ownedAdvertiser,
     GameFeedback feedback = const NoopGameFeedback(),
     GameFeelSettings? initialFeelSettings,
-    LanReconnectStore? reconnectStore,
     bool disposeFeedbackOnClose = true,
   }) : _client = client,
-       _reconnectStore = reconnectStore ?? SharedPreferencesLanReconnectStore(),
        super(
          client.latestGameState!.settings,
          feedback: feedback,
@@ -31,7 +29,6 @@ class LanGameSessionController extends LocalGameSessionController {
   }
 
   LanClientConnection _client;
-  final LanReconnectStore _reconnectStore;
   final LanHostServer? ownedHost;
   final LanRoomAdvertiser? ownedAdvertiser;
   StreamSubscription<LanEnvelope>? _messageSubscription;
@@ -45,6 +42,7 @@ class LanGameSessionController extends LocalGameSessionController {
   final networkPaused = false.obs;
   var _networkAttempt = 0;
   var _reconnectGeneration = 0;
+  Future<void>? _shutdownFuture;
 
   LanClientConnection get client => _client;
 
@@ -62,7 +60,6 @@ class LanGameSessionController extends LocalGameSessionController {
   void onInit() {
     super.onInit();
     _attachClient(_client);
-    unawaited(_persistReconnect());
   }
 
   @override
@@ -138,8 +135,11 @@ class LanGameSessionController extends LocalGameSessionController {
       case LanMessageType.error:
         networkErrorCode.value = envelope.payload['code']! as String;
       case LanMessageType.hostEnded:
+        _reconnectGeneration++;
+        isReconnecting.value = false;
+        connectionStatus.value = LanConnectionStatus.closed;
+        networkPaused.value = false;
         networkErrorCode.value = 'host_ended';
-        unawaited(_reconnectStore.clear());
       case LanMessageType.matchStarted ||
           LanMessageType.joinRequest ||
           LanMessageType.joinAccepted ||
@@ -247,11 +247,13 @@ class LanGameSessionController extends LocalGameSessionController {
         }
         isReconnecting.value = false;
         networkErrorCode.value = null;
-        await _persistReconnect();
         return;
       } on Object {
         await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
       }
+    }
+    if (generation != _reconnectGeneration) {
+      return;
     }
     isReconnecting.value = false;
     connectionStatus.value = LanConnectionStatus.disconnected;
@@ -259,9 +261,9 @@ class LanGameSessionController extends LocalGameSessionController {
   }
 
   void handleLifecycle(bool resumed) {
-    if (!resumed) {
-      unawaited(_persistReconnect());
-    } else if (connectionStatus.value == LanConnectionStatus.disconnected) {
+    if (resumed &&
+        connectionStatus.value == LanConnectionStatus.disconnected &&
+        networkErrorCode.value != 'host_ended') {
       unawaited(reconnect());
     }
   }
@@ -274,32 +276,29 @@ class LanGameSessionController extends LocalGameSessionController {
     networkErrorCode.value = null;
   }
 
-  Future<void> _persistReconnect() async {
-    try {
-      await _reconnectStore.save(
-        LanReconnectCredentials.fromConnection(_client),
-      );
-    } on Object {
-      // A live LAN match must continue even when device storage is unavailable.
-    }
+  Future<void> shutdown() {
+    return _shutdownFuture ??= _shutdown();
+  }
+
+  Future<void> _shutdown() async {
+    _reconnectGeneration++;
+    isReconnecting.value = false;
+    await Future.wait([
+      if (_messageSubscription != null) _messageSubscription!.cancel(),
+      if (_statusSubscription != null) _statusSubscription!.cancel(),
+      if (_latencySubscription != null) _latencySubscription!.cancel(),
+    ]);
+    // Stop announcing first, then tell guests that the host ended the room.
+    // Awaiting this sequence prevents a newly created room from overlapping
+    // the previous room on the fixed LAN port.
+    await ownedAdvertiser?.close();
+    await ownedHost?.close();
+    await _client.close();
   }
 
   @override
   void onClose() {
-    _reconnectGeneration++;
-    _messageSubscription?.cancel();
-    _statusSubscription?.cancel();
-    _latencySubscription?.cancel();
-    unawaited(_persistReconnect());
-    unawaited(_client.close());
-    final advertiser = ownedAdvertiser;
-    if (advertiser != null) {
-      unawaited(advertiser.close());
-    }
-    final host = ownedHost;
-    if (host != null) {
-      unawaited(host.close());
-    }
+    unawaited(shutdown());
     super.onClose();
   }
 }

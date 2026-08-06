@@ -39,13 +39,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get boardSizeLabel => 'Ойын алаңы';
 
   @override
-  String get rulesetLabel => 'Ережелер';
-
-  @override
   String get boardSizeSmall => 'Кіші';
 
   @override
-  String get boardSizeClassic => 'Классикалық';
+  String get boardSizeClassic => 'Классикалық алаң';
 
   @override
   String get boardSizeLarge => 'Үлкен';
@@ -54,13 +51,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String get boardSizeHuge => 'Өте үлкен';
 
   @override
-  String get boardSizeCustom => 'Арнайы';
+  String get boardSizeCustom => 'Өз өлшемім';
 
   @override
-  String get classicRules => 'Классикалық ережелер';
+  String get classicBoardDetails =>
+      '37 шеге · 54 үшбұрыш · резеңке: 2 ойыншыға 10, 3–4 ойыншыға 12';
 
   @override
-  String get customRules => 'Арнайы ережелер';
+  String get scaledBoardDetails =>
+      'Резеңке мен белгі саны алаң көлемі мен ойыншылар санына автоматты есептеледі.';
 
   @override
   String customRadiusLabel(int radius) {

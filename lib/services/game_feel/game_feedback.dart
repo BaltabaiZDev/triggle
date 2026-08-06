@@ -102,15 +102,19 @@ class GameFeedbackCoordinator implements GameFeedback {
   final TriGridHapticsService _haptics;
 
   @override
-  Future<void> initialize(GameFeelSettings settings) {
-    _haptics.updateSettings(settings);
-    return _safe(() => _audio.initialize(settings));
+  Future<void> initialize(GameFeelSettings settings) async {
+    await Future.wait([
+      _safe(() => _haptics.initialize(settings)),
+      _safe(() => _audio.initialize(settings)),
+    ]);
   }
 
   @override
-  Future<void> updateSettings(GameFeelSettings settings) {
-    _haptics.updateSettings(settings);
-    return _safe(() => _audio.updateSettings(settings));
+  Future<void> updateSettings(GameFeelSettings settings) async {
+    await Future.wait([
+      _safe(() => _haptics.initialize(settings)),
+      _safe(() => _audio.updateSettings(settings)),
+    ]);
   }
 
   @override
@@ -129,8 +133,8 @@ class GameFeedbackCoordinator implements GameFeedback {
   @override
   Future<void> elasticSnap() async {
     await Future.wait([
-      _safe(() => _audio.play(GameSound.elasticSnap)),
       _safe(() => _haptics.play(GameHaptic.snap)),
+      _safe(() => _audio.play(GameSound.elasticSnap)),
     ]);
   }
 
@@ -145,12 +149,12 @@ class GameFeedbackCoordinator implements GameFeedback {
   @override
   Future<void> capture(int count) async {
     await Future.wait([
+      _safe(() => _haptics.play(GameHaptic.capture)),
       _safe(
         () => _audio.play(
           count > 1 ? GameSound.captureCombo : GameSound.triangleCapture,
         ),
       ),
-      _safe(() => _haptics.play(GameHaptic.capture)),
     ]);
   }
 

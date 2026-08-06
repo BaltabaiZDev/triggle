@@ -9,14 +9,13 @@
   "localGameSetupSubtitle": "Choose the board and pass this device between turns.",
   "playerCountLabel": "Players",
   "boardSizeLabel": "Game board",
-  "rulesetLabel": "Rules",
   "boardSizeSmall": "Small",
-  "boardSizeClassic": "Classic",
+  "boardSizeClassic": "Classic board",
   "boardSizeLarge": "Large",
   "boardSizeHuge": "Huge",
-  "boardSizeCustom": "Custom",
-  "classicRules": "Classic rules",
-  "customRules": "Custom rules",
+  "boardSizeCustom": "Custom size",
+  "classicBoardDetails": "37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4",
+  "scaledBoardDetails": "Band and marker supplies scale automatically with board size and player count.",
   "customRadiusLabel": "Radius {radius}",
   "@customRadiusLabel": {
     "placeholders": {

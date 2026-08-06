@@ -34,9 +34,30 @@ class LanRoomAdvertisement {
 
   String get websocketUrl => 'ws://$address:$port/ws';
 
-  String get qrPayload =>
-      'trigrid://join?host=$address&port=$port&code=$roomCode'
-      '&v=$protocolVersion';
+  String get qrPayload => Uri(
+    scheme: 'trigrid',
+    host: 'join',
+    queryParameters: {
+      'id': roomId,
+      'host': address,
+      'port': '$port',
+      'code': roomCode,
+      'v': '$protocolVersion',
+    },
+  ).toString();
+
+  LanRoomAdvertisement copyWith({String? address}) {
+    return LanRoomAdvertisement(
+      roomId: roomId,
+      roomCode: roomCode,
+      roomName: roomName,
+      address: address ?? this.address,
+      port: port,
+      playerCount: playerCount,
+      capacity: capacity,
+      protocolVersion: protocolVersion,
+    );
+  }
 
   Map<String, Object> toJson() => {
     'roomId': roomId,

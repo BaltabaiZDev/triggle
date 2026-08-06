@@ -40,13 +40,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get boardSizeLabel => 'Игровое поле';
 
   @override
-  String get rulesetLabel => 'Правила';
-
-  @override
   String get boardSizeSmall => 'Малое';
 
   @override
-  String get boardSizeClassic => 'Классическое';
+  String get boardSizeClassic => 'Классическое поле';
 
   @override
   String get boardSizeLarge => 'Большое';
@@ -55,13 +52,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get boardSizeHuge => 'Огромное';
 
   @override
-  String get boardSizeCustom => 'Своё';
+  String get boardSizeCustom => 'Свой размер';
 
   @override
-  String get classicRules => 'Классические правила';
+  String get classicBoardDetails =>
+      '37 колышков · 54 треугольника · резинки: 10 для 2 игроков, 12 для 3–4';
 
   @override
-  String get customRules => 'Особые правила';
+  String get scaledBoardDetails =>
+      'Количество резинок и маркеров автоматически зависит от размера поля и числа игроков.';
 
   @override
   String customRadiusLabel(int radius) {

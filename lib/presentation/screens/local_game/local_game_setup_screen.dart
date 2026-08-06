@@ -28,7 +28,6 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
   var _playerCount = 2;
   var _boardPreset = BoardSizePreset.classic;
   var _customRadius = 6;
-  var _useClassicRules = true;
   final List<bool> _isBot = List<bool>.filled(4, false);
   final List<BotDifficulty> _botDifficulties = List<BotDifficulty>.filled(
     4,
@@ -53,7 +52,6 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
       _playerCount = saved.playerCount;
       _boardPreset = saved.boardPreset;
       _customRadius = saved.customRadius;
-      _useClassicRules = saved.useClassicRules;
     }
     if (widget.mode == LocalGameSetupMode.solo) {
       for (var index = 1; index < _isBot.length; index++) {
@@ -160,11 +158,7 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
                           if (preset == null) {
                             return;
                           }
-                          setState(() {
-                            _boardPreset = preset;
-                            _useClassicRules =
-                                preset == BoardSizePreset.classic;
-                          });
+                          setState(() => _boardPreset = preset);
                         },
                       ),
                       if (_boardPreset == BoardSizePreset.custom) ...[
@@ -182,16 +176,12 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
                           },
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.classicRules),
-                        value: _useClassicRules,
-                        onChanged: _boardPreset == BoardSizePreset.classic
-                            ? (value) {
-                                setState(() => _useClassicRules = value);
-                              }
-                            : null,
+                      const SizedBox(height: 6),
+                      Text(
+                        _boardPreset == BoardSizePreset.classic
+                            ? l10n.classicBoardDetails
+                            : l10n.scaledBoardDetails,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
@@ -220,7 +210,7 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
     final settings = GameSettings(
       matchId: const Uuid().v4(),
       boardSize: boardSize,
-      ruleset: _useClassicRules ? Ruleset.classic : Ruleset.custom,
+      ruleset: boardSize.isClassic ? Ruleset.classic : Ruleset.custom,
       players: [
         for (var index = 0; index < _playerCount; index++)
           PlayerConfiguration(
@@ -249,7 +239,7 @@ class _LocalGameSetupScreenState extends State<LocalGameSetupScreen> {
         playerCount: _playerCount,
         boardPreset: _boardPreset,
         customRadius: _customRadius,
-        useClassicRules: _useClassicRules,
+        useClassicRules: boardSize.isClassic,
       );
       final preferences = appController.preferences.value;
       unawaited(

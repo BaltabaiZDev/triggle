@@ -224,40 +224,18 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
                               widget.client.updateRoom(
                                 boardSize: board,
                                 ruleset: board.isClassic
-                                    ? _lobby.ruleset
+                                    ? Ruleset.classic
                                     : Ruleset.custom,
                                 turnTimeSeconds: _lobby.turnTimeSeconds,
                               );
                             },
                     ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<Ruleset>(
-                      initialValue: _lobby.ruleset,
-                      decoration: InputDecoration(
-                        labelText: l10n.rulesetLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: Ruleset.classic,
-                          child: Text(l10n.classicRules),
-                        ),
-                        DropdownMenuItem(
-                          value: Ruleset.custom,
-                          child: Text(l10n.customRules),
-                        ),
-                      ],
-                      onChanged: _lobby.started || !_lobby.boardSize.isClassic
-                          ? null
-                          : (ruleset) {
-                              if (ruleset != null) {
-                                widget.client.updateRoom(
-                                  boardSize: _lobby.boardSize,
-                                  ruleset: ruleset,
-                                  turnTimeSeconds: _lobby.turnTimeSeconds,
-                                );
-                              }
-                            },
+                    const SizedBox(height: 6),
+                    Text(
+                      _lobby.boardSize.isClassic
+                          ? l10n.classicBoardDetails
+                          : l10n.scaledBoardDetails,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<int>(

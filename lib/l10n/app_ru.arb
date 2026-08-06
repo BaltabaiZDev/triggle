@@ -9,14 +9,13 @@
   "localGameSetupSubtitle": "Выберите поле и передавайте устройство после каждого хода.",
   "playerCountLabel": "Игроки",
   "boardSizeLabel": "Игровое поле",
-  "rulesetLabel": "Правила",
   "boardSizeSmall": "Малое",
-  "boardSizeClassic": "Классическое",
+  "boardSizeClassic": "Классическое поле",
   "boardSizeLarge": "Большое",
   "boardSizeHuge": "Огромное",
-  "boardSizeCustom": "Своё",
-  "classicRules": "Классические правила",
-  "customRules": "Особые правила",
+  "boardSizeCustom": "Свой размер",
+  "classicBoardDetails": "37 колышков · 54 треугольника · резинки: 10 для 2 игроков, 12 для 3–4",
+  "scaledBoardDetails": "Количество резинок и маркеров автоматически зависит от размера поля и числа игроков.",
   "customRadiusLabel": "Радиус: {radius}",
   "@customRadiusLabel": {
     "placeholders": {

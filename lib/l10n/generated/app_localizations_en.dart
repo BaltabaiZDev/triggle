@@ -39,13 +39,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boardSizeLabel => 'Game board';
 
   @override
-  String get rulesetLabel => 'Rules';
-
-  @override
   String get boardSizeSmall => 'Small';
 
   @override
-  String get boardSizeClassic => 'Classic';
+  String get boardSizeClassic => 'Classic board';
 
   @override
   String get boardSizeLarge => 'Large';
@@ -54,13 +51,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boardSizeHuge => 'Huge';
 
   @override
-  String get boardSizeCustom => 'Custom';
+  String get boardSizeCustom => 'Custom size';
 
   @override
-  String get classicRules => 'Classic rules';
+  String get classicBoardDetails =>
+      '37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4';
 
   @override
-  String get customRules => 'Custom rules';
+  String get scaledBoardDetails =>
+      'Band and marker supplies scale automatically with board size and player count.';
 
   @override
   String customRadiusLabel(int radius) {

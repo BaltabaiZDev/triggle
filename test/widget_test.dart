@@ -40,7 +40,12 @@ void main() {
     expect(find.text('Local game'), findsOneWidget);
     expect(find.text('Players'), findsOneWidget);
     expect(find.text('Game board'), findsOneWidget);
-    expect(find.text('Classic rules'), findsOneWidget);
+    expect(find.text('Classic board'), findsOneWidget);
+    expect(
+      find.text('37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'),
+      findsOneWidget,
+    );
+    expect(find.text('Custom rules'), findsNothing);
 
     await tester.tap(find.text('4'));
     await tester.pump();
@@ -153,6 +158,12 @@ void main() {
     expect(find.text('Create LAN game'), findsOneWidget);
     expect(find.text('Player name'), findsOneWidget);
     expect(find.text('Room name'), findsOneWidget);
+    expect(find.text('Classic board'), findsOneWidget);
+    expect(
+      find.text('37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'),
+      findsOneWidget,
+    );
+    expect(find.text('Custom rules'), findsNothing);
     expect(find.text('Create room'), findsOneWidget);
 
     await tester.pageBack();

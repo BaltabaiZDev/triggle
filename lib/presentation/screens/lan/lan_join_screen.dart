@@ -19,12 +19,9 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
   late final TextEditingController _playerController;
   final TextEditingController _hostController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
-  final LanReconnectStore _reconnectStore =
-      SharedPreferencesLanReconnectStore();
   LanRoomBrowser? _browser;
   StreamSubscription<List<LanRoomAdvertisement>>? _roomSubscription;
   List<LanRoomAdvertisement> _rooms = const [];
-  LanReconnectCredentials? _savedCredentials;
   var _initialized = false;
   var _busy = false;
   var _failed = false;
@@ -44,7 +41,10 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
             : savedName,
       );
       unawaited(_startDiscovery());
-      unawaited(_loadSavedReconnect());
+      // Reconnect tokens are intentionally memory-only. A newly opened room
+      // always has a new id and code, so durable credentials only point at an
+      // expired session and make the next join slower.
+      unawaited(_clearLegacyReconnect());
     }
   }
 
@@ -66,6 +66,15 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
       if (mounted) {
         setState(() => _discoveryFailed = true);
       }
+    }
+  }
+
+  Future<void> _clearLegacyReconnect() async {
+    try {
+      await SharedPreferencesLanReconnectStore().clear();
+    } on Object {
+      // A missing storage platform in tests or a storage failure must not
+      // block discovery and manual joining.
     }
   }
 
@@ -100,45 +109,6 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
                       border: const OutlineInputBorder(),
                     ),
                   ),
-                  if (_savedCredentials != null) ...[
-                    const SizedBox(height: 14),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              l10n.savedLanMatch,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${l10n.roomCodeDisplay(_savedCredentials!.roomCode)} · ${_savedCredentials!.websocketUrl}',
-                            ),
-                            const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              alignment: WrapAlignment.end,
-                              children: [
-                                TextButton(
-                                  onPressed: _busy ? null : _forgetSaved,
-                                  child: Text(l10n.forgetSavedLan),
-                                ),
-                                FilledButton.icon(
-                                  onPressed: _busy ? null : _reconnectSaved,
-                                  icon: const Icon(Icons.sync_rounded),
-                                  label: Text(l10n.reconnectSavedLan),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 14),
                   Text(
                     l10n.discoveredRooms,
@@ -270,42 +240,6 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
     unawaited(_connect(room.websocketUrl, room.roomCode));
   }
 
-  Future<void> _loadSavedReconnect() async {
-    try {
-      final saved = await _reconnectStore.load();
-      if (mounted) {
-        setState(() => _savedCredentials = saved);
-      }
-    } on Object {
-      // Joining by discovery, IP, or QR remains available without storage.
-    }
-  }
-
-  void _reconnectSaved() {
-    final saved = _savedCredentials;
-    if (saved == null) {
-      return;
-    }
-    final uri = Uri.parse(saved.websocketUrl);
-    _playerController.text = saved.playerName;
-    _hostController.text = uri.host;
-    _codeController.text = saved.roomCode;
-    unawaited(
-      _connect(
-        saved.websocketUrl,
-        saved.roomCode,
-        sessionToken: saved.sessionToken,
-      ),
-    );
-  }
-
-  Future<void> _forgetSaved() async {
-    await _reconnectStore.clear();
-    if (mounted) {
-      setState(() => _savedCredentials = null);
-    }
-  }
-
   void _manualConnect() {
     final host = _hostController.text.trim();
     final code = _codeController.text.trim();
@@ -321,12 +255,13 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
     if (link == null || !mounted) {
       return;
     }
-    _hostController.text = link.host;
+    final websocketUrl = link.resolveWebsocketUrl(_rooms);
+    _hostController.text = Uri.parse(websocketUrl).host;
     _codeController.text = link.roomCode;
-    await _connect(link.websocketUrl, link.roomCode);
+    await _connect(websocketUrl, link.roomCode);
   }
 
-  Future<void> _connect(String url, String code, {String? sessionToken}) async {
+  Future<void> _connect(String url, String code) async {
     final playerName = _playerController.text.trim();
     if (playerName.isEmpty || _busy) {
       setState(() => _failed = true);
@@ -342,15 +277,7 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
         websocketUrl: url,
         playerName: playerName,
         roomCode: code,
-        sessionToken: sessionToken,
       );
-      try {
-        await _reconnectStore.save(
-          LanReconnectCredentials.fromConnection(client),
-        );
-      } on Object {
-        // Storage failure must not prevent an otherwise valid LAN join.
-      }
       if (Get.isRegistered<AppController>()) {
         final appController = Get.find<AppController>();
         await appController.updatePreferences(

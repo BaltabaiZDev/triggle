@@ -154,12 +154,6 @@ abstract class AppLocalizations {
   /// **'Game board'**
   String get boardSizeLabel;
 
-  /// No description provided for @rulesetLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Rules'**
-  String get rulesetLabel;
-
   /// No description provided for @boardSizeSmall.
   ///
   /// In en, this message translates to:
@@ -169,7 +163,7 @@ abstract class AppLocalizations {
   /// No description provided for @boardSizeClassic.
   ///
   /// In en, this message translates to:
-  /// **'Classic'**
+  /// **'Classic board'**
   String get boardSizeClassic;
 
   /// No description provided for @boardSizeLarge.
@@ -187,20 +181,20 @@ abstract class AppLocalizations {
   /// No description provided for @boardSizeCustom.
   ///
   /// In en, this message translates to:
-  /// **'Custom'**
+  /// **'Custom size'**
   String get boardSizeCustom;
 
-  /// No description provided for @classicRules.
+  /// No description provided for @classicBoardDetails.
   ///
   /// In en, this message translates to:
-  /// **'Classic rules'**
-  String get classicRules;
+  /// **'37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'**
+  String get classicBoardDetails;
 
-  /// No description provided for @customRules.
+  /// No description provided for @scaledBoardDetails.
   ///
   /// In en, this message translates to:
-  /// **'Custom rules'**
-  String get customRules;
+  /// **'Band and marker supplies scale automatically with board size and player count.'**
+  String get scaledBoardDetails;
 
   /// No description provided for @customRadiusLabel.
   ///

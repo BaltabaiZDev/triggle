@@ -9,14 +9,13 @@
   "localGameSetupSubtitle": "Ойын алаңын таңдап, әр кезектен кейін құрылғыны келесі ойыншыға беріңіз.",
   "playerCountLabel": "Ойыншылар",
   "boardSizeLabel": "Ойын алаңы",
-  "rulesetLabel": "Ережелер",
   "boardSizeSmall": "Кіші",
-  "boardSizeClassic": "Классикалық",
+  "boardSizeClassic": "Классикалық алаң",
   "boardSizeLarge": "Үлкен",
   "boardSizeHuge": "Өте үлкен",
-  "boardSizeCustom": "Арнайы",
-  "classicRules": "Классикалық ережелер",
-  "customRules": "Арнайы ережелер",
+  "boardSizeCustom": "Өз өлшемім",
+  "classicBoardDetails": "37 шеге · 54 үшбұрыш · резеңке: 2 ойыншыға 10, 3–4 ойыншыға 12",
+  "scaledBoardDetails": "Резеңке мен белгі саны алаң көлемі мен ойыншылар санына автоматты есептеледі.",
   "customRadiusLabel": "Радиусы: {radius}",
   "@customRadiusLabel": {
     "placeholders": {
