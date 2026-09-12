@@ -7,6 +7,32 @@ import 'package:trigrid/presentation/controllers/local_game_session_controller.d
 import 'package:trigrid/services/game_feel/game_feel_settings.dart';
 
 void main() {
+  testWidgets(
+    'band spring begins continuously and invalid feedback is finite',
+    (tester) async {
+      final session = LocalGameSessionController(_settings());
+      final game = TriGridFlameGame(session: session);
+      await tester.pumpWidget(MaterialApp(home: GameWidget(game: game)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final move = session.engine.validator
+          .legalMoves(session.currentState)
+          .first;
+      final transition = session.submitMove(move.start, move.end);
+      final action = transition!.action.actionId;
+      expect(game.bandPlacementProgress(action), 0);
+      game.update(0.001);
+      expect(game.bandPlacementProgress(action), inInclusiveRange(0, 0.02));
+      game.animateInvalid();
+      game.update(0.02);
+      expect(game.boardShakeOffset.dx, isNot(0));
+      game.update(0.5);
+      expect(game.boardShakeOffset, Offset.zero);
+      expect(game.bandPlacementProgress(action), 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('tap and drag input submit legal moves through the engine', (
     tester,
   ) async {

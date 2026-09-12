@@ -14,7 +14,7 @@
   "boardSizeLarge": "Large",
   "boardSizeHuge": "Huge",
   "boardSizeCustom": "Custom size",
-  "classicBoardDetails": "37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4",
+  "classicBoardDetails": "37 pegs · 54 triangles · bands: 14 for 2 players, 16 for 3–4",
   "scaledBoardDetails": "Band and marker supplies scale automatically with board size and player count.",
   "customRadiusLabel": "Radius {radius}",
   "@customRadiusLabel": {
@@ -315,7 +315,7 @@
   "rulesEndingTitle": "End and winner",
   "rulesEndingBody": "The match ends at the marker limit, after the available bands are used, or when no legal move remains. Highest score wins; tied top scores produce a tie.",
   "rulesBoardsTitle": "Boards and supplies",
-  "rulesBoardsBody": "Classic is radius 3 with 37 pegs and 54 triangles. Two players receive 10 bands each; three or four receive 12. Other board sizes use clearly marked custom supply scaling.",
+  "rulesBoardsBody": "Classic has 37 pegs and 54 triangles. Two players receive 14 bands each; three or four receive 16. Small supports two players with 6 bands each. Other sizes use scaled supplies. Restarting a round rotates the first player.",
   "botGuideTitle": "Bot strengths",
   "botGuideIntro": "All bots obey the same rules and only see public game state. Higher levels evaluate more replies and defensive consequences; difficulty is not just a delay.",
   "botBeginnerDescription": "Mostly random legal play with occasional immediate captures. Fast and intentionally forgiving.",
@@ -491,5 +491,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "lanWrongCode": "Room code is incorrect.",
+  "lanRoomFull": "This room is full.",
+  "lanRoomStarted": "The match has already started.",
+  "lanRoomClosed": "This room is closed. Choose a new room.",
+  "lanVersionMismatch": "Update the game on every device.",
+  "smallBoardLimit": "Small board · 2 players"
 }

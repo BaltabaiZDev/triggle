@@ -171,7 +171,7 @@ void main() {
 
     test('worker returns a legal move from a background isolate', () async {
       final settings = _settings(
-        BoardSize.fromPreset(BoardSizePreset.small),
+        BoardSize.fromPreset(BoardSizePreset.classic),
         players: 3,
       );
       final state = GameState.initial(settings);

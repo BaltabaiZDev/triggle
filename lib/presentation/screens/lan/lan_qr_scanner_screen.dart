@@ -1,3 +1,4 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -27,7 +28,12 @@ class _LanQrScannerScreenState extends State<LanQrScannerScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.qrScannerTitle)),
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.qrScannerTitle),
+      ),
       body: Stack(
         children: [
           Positioned.fill(

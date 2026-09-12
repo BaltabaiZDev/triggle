@@ -1,4 +1,7 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
+import 'package:trigrid/presentation/widgets/game_icon_controls.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -60,8 +63,13 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.hostSetupTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.hostSetupTitle),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -91,38 +99,17 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    DropdownButtonFormField<BoardSizePreset>(
-                      initialValue: _boardPreset,
-                      decoration: InputDecoration(
-                        labelText: l10n.boardSizeLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        for (final preset in [
-                          BoardSizePreset.small,
-                          BoardSizePreset.classic,
-                          BoardSizePreset.large,
-                          BoardSizePreset.huge,
-                        ])
-                          DropdownMenuItem(
-                            value: preset,
-                            child: Text(_boardLabel(l10n, preset)),
-                          ),
-                      ],
+                    Text(
+                      l10n.boardSizeLabel,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    BoardSizeSelector(
+                      value: _boardPreset,
+                      includeCustom: false,
                       onChanged: _busy
                           ? null
-                          : (value) {
-                              if (value != null) {
-                                setState(() => _boardPreset = value);
-                              }
-                            },
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _boardPreset == BoardSizePreset.classic
-                          ? l10n.classicBoardDetails
-                          : l10n.scaledBoardDetails,
-                      style: Theme.of(context).textTheme.bodySmall,
+                          : (value) => setState(() => _boardPreset = value),
                     ),
                     if (_failed) ...[
                       const SizedBox(height: 12),
@@ -134,15 +121,19 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
                       ),
                     ],
                     const SizedBox(height: 14),
-                    FilledButton.icon(
-                      onPressed: _busy ? null : _createRoom,
-                      icon: _busy
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.wifi_tethering_rounded),
-                      label: Text(l10n.createRoom),
+                    GamePress(
+                      child: FilledButton.icon(
+                        onPressed: _busy ? null : _createRoom,
+                        icon: _busy
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.wifi_tethering_rounded),
+                        label: Text(l10n.createRoom),
+                      ),
                     ),
                   ],
                 ),
@@ -191,6 +182,8 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
       }
       host = await LanHostServer.start(
         hostName: playerName,
+        startingPlayerIndex:
+            appController?.statistics.value.lan.matchesPlayed ?? 0,
         roomName: roomName,
         boardSize: boardSize,
         ruleset: boardSize.isClassic ? Ruleset.classic : Ruleset.custom,
@@ -219,7 +212,7 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
       final savedBots =
           appController?.preferences.value.lanSetup.botSeats ?? const {};
       for (final entry in savedBots.entries) {
-        if (entry.key > 0 && entry.key < 4) {
+        if (entry.key > 0 && entry.key < boardSize.maximumPlayers) {
           client.addBot(
             seatIndex: entry.key,
             displayName: l10n.botDefaultName(entry.key + 1),
@@ -242,15 +235,5 @@ class _LanHostSetupScreenState extends State<LanHostSetupScreen> {
         });
       }
     }
-  }
-
-  String _boardLabel(AppLocalizations l10n, BoardSizePreset preset) {
-    return switch (preset) {
-      BoardSizePreset.small => l10n.boardSizeSmall,
-      BoardSizePreset.classic => l10n.boardSizeClassic,
-      BoardSizePreset.large => l10n.boardSizeLarge,
-      BoardSizePreset.huge => l10n.boardSizeHuge,
-      BoardSizePreset.custom => l10n.boardSizeCustom,
-    };
   }
 }

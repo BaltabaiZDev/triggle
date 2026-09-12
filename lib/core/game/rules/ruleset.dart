@@ -31,13 +31,22 @@ class PlayerSupplies {
 }
 
 abstract final class SupplyPolicy {
+  static const currentRulesVersion = 2;
+
   static PlayerSupplies forMatch({
     required BoardSize boardSize,
     required int playerCount,
     required Ruleset ruleset,
+    int rulesVersion = currentRulesVersion,
   }) {
+    if (rulesVersion < 1 || rulesVersion > currentRulesVersion) {
+      throw FormatException('Unsupported rules version $rulesVersion.');
+    }
     if (playerCount < 2 || playerCount > 4) {
       throw RangeError.range(playerCount, 2, 4, 'playerCount');
+    }
+    if (rulesVersion >= 2 && playerCount > boardSize.maximumPlayers) {
+      throw ArgumentError('Small boards support two players.');
     }
     if (ruleset == Ruleset.classic) {
       if (!boardSize.isClassic) {
@@ -45,17 +54,23 @@ abstract final class SupplyPolicy {
           'Classic rules require the Classic radius-3 board.',
         );
       }
-      return PlayerSupplies(bands: playerCount == 2 ? 10 : 12, markers: 21);
+      return PlayerSupplies(
+        bands: rulesVersion >= 2
+            ? (playerCount == 2 ? 14 : 16)
+            : (playerCount == 2 ? 10 : 12),
+        markers: 21,
+      );
     }
 
-    final classicBandBaseline = playerCount == 2 ? 10 : 12;
+    final classicBandBaseline = rulesVersion >= 2
+        ? (playerCount == 2 ? 14 : 16)
+        : (playerCount == 2 ? 10 : 12);
     final scaledBands =
         (classicBandBaseline * boardSize.potentialBandMoveCount / 48).round();
     final maximumFairShare = boardSize.potentialBandMoveCount ~/ playerCount;
-    final bands = math.min(
-      math.max(1, scaledBands),
-      math.max(1, maximumFairShare),
-    );
+    final bands = rulesVersion >= 2 && boardSize.radius == 2 && playerCount == 2
+        ? 6
+        : math.min(math.max(1, scaledBands), math.max(1, maximumFairShare));
     final markers = math.max(
       1,
       (21 * boardSize.expectedTriangleCount / 54).round(),

@@ -32,8 +32,8 @@ class ReplayGameSessionController extends LocalGameSessionController {
   Future<void> startAutomatedTurnIfNeeded() async {}
 
   @override
-  void restart() {
-    super.restart();
+  void restart({bool newRound = true}) {
+    super.restart(newRound: false);
     prepareReplayActions(replay.actions);
     unawaited(replayAcceptedActions());
   }

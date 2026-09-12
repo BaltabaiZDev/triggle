@@ -187,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @classicBoardDetails.
   ///
   /// In en, this message translates to:
-  /// **'37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'**
+  /// **'37 pegs · 54 triangles · bands: 14 for 2 players, 16 for 3–4'**
   String get classicBoardDetails;
 
   /// No description provided for @scaledBoardDetails.
@@ -1219,7 +1219,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesBoardsBody.
   ///
   /// In en, this message translates to:
-  /// **'Classic is radius 3 with 37 pegs and 54 triangles. Two players receive 10 bands each; three or four receive 12. Other board sizes use clearly marked custom supply scaling.'**
+  /// **'Classic has 37 pegs and 54 triangles. Two players receive 14 bands each; three or four receive 16. Small supports two players with 6 bands each. Other sizes use scaled supplies. Restarting a round rotates the first player.'**
   String get rulesBoardsBody;
 
   /// No description provided for @botGuideTitle.
@@ -1731,6 +1731,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hash {value}'**
   String debugStateHash(String value);
+
+  /// No description provided for @lanWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Room code is incorrect.'**
+  String get lanWrongCode;
+
+  /// No description provided for @lanRoomFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This room is full.'**
+  String get lanRoomFull;
+
+  /// No description provided for @lanRoomStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The match has already started.'**
+  String get lanRoomStarted;
+
+  /// No description provided for @lanRoomClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This room is closed. Choose a new room.'**
+  String get lanRoomClosed;
+
+  /// No description provided for @lanVersionMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the game on every device.'**
+  String get lanVersionMismatch;
+
+  /// No description provided for @smallBoardLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Small board · 2 players'**
+  String get smallBoardLimit;
 }
 
 class _AppLocalizationsDelegate

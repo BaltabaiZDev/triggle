@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:trigrid/core/game/trigrid_engine.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
@@ -8,8 +10,13 @@ class BotDifficultyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.botGuideTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.botGuideTitle),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),

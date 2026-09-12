@@ -69,6 +69,7 @@ class GameState {
       boardSize: settings.boardSize,
       playerCount: settings.players.length,
       ruleset: settings.ruleset,
+      rulesVersion: settings.rulesVersion,
     );
     return GameState(
       settings: settings,
@@ -80,7 +81,7 @@ class GameState {
             supplies: supplies,
           ),
       ],
-      currentPlayerIndex: 0,
+      currentPlayerIndex: settings.startingPlayerIndex,
       placedBands: const [],
       occupiedEdges: const {},
       capturedTriangles: const {},

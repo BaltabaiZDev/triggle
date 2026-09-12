@@ -30,6 +30,7 @@ void main() {
         boardSize: classic,
         playerCount: 2,
         ruleset: Ruleset.classic,
+        rulesVersion: 1,
       );
 
       expect(supplies, const PlayerSupplies(bands: 10, markers: 21));
@@ -41,6 +42,7 @@ void main() {
           boardSize: classic,
           playerCount: players,
           ruleset: Ruleset.classic,
+          rulesVersion: 1,
         );
 
         expect(supplies, const PlayerSupplies(bands: 12, markers: 21));
@@ -53,6 +55,7 @@ void main() {
         boardSize: small,
         playerCount: 4,
         ruleset: Ruleset.custom,
+        rulesVersion: 1,
       );
 
       expect(small.potentialBandMoveCount, 12);
@@ -65,6 +68,7 @@ void main() {
           boardSize: BoardSize.fromPreset(BoardSizePreset.large),
           playerCount: 2,
           ruleset: Ruleset.classic,
+          rulesVersion: 1,
         ),
         throwsArgumentError,
       );

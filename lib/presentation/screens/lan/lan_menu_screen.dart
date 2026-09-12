@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
@@ -11,8 +13,13 @@ class LanMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.lanMenuTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.lanMenuTitle),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -22,12 +29,14 @@ class LanMenuScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _LanActionCard(
-                    icon: Icons.wifi_tethering_rounded,
-                    title: l10n.hostRoom,
-                    onTap: () => _openLanScreen(
-                      context,
-                      () => const LanHostSetupScreen(),
+                  GameReveal(
+                    child: _LanActionCard(
+                      icon: Icons.wifi_tethering_rounded,
+                      title: l10n.hostRoom,
+                      onTap: () => _openLanScreen(
+                        context,
+                        () => const LanHostSetupScreen(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 7),
@@ -66,21 +75,27 @@ class LanMenuScreen extends StatelessWidget {
         title: Text(l10n.lanPermissionTitle),
         content: Text(l10n.lanPermissionDescription),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          GamePress(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+            ),
           ),
           if (result == LanPermissionResult.permanentlyDenied)
-            TextButton(
-              onPressed: () {
-                permissions.openSystemSettings();
-                Navigator.pop(context, false);
-              },
-              child: Text(l10n.openSystemSettings),
+            GamePress(
+              child: TextButton(
+                onPressed: () {
+                  permissions.openSystemSettings();
+                  Navigator.pop(context, false);
+                },
+                child: Text(l10n.openSystemSettings),
+              ),
             ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.continueAction),
+          GamePress(
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.continueAction),
+            ),
           ),
         ],
       ),
@@ -105,27 +120,29 @@ class _LanActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
+      child: GamePress(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
           ),
         ),
       ),

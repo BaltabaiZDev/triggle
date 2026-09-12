@@ -6,11 +6,61 @@ import 'package:trigrid/app/trigrid_app.dart';
 import 'package:trigrid/core/persistence/trigrid_persistence.dart';
 import 'package:trigrid/game/trigrid_flame_game.dart';
 import 'package:trigrid/services/game_feel/game_feedback.dart';
+import 'support/load_game_fonts.dart';
+import 'support/atomic_golden_comparator.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  final originalComparator = goldenFileComparator;
+  if (originalComparator is LocalFileComparator) {
+    goldenFileComparator = AtomicGoldenComparator(
+      originalComparator.basedir.resolve('golden_test.dart'),
+    );
+  }
+  tearDownAll(() => goldenFileComparator = originalComparator);
+  setUpAll(loadGameFonts);
   const goldenRoot = Key('golden-root');
 
   tearDown(Get.reset);
+
+  testWidgets('minimal setup in Kazakh on standard and small phones', (
+    tester,
+  ) async {
+    Get.put<GameFeedback>(const NoopGameFeedback());
+    await tester.binding.setSurfaceSize(const Size(430, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenRoot,
+        child: TriGridApp(
+          ambientMotion: false,
+          repository: MemoryTriGridRepository(
+            TriGridData.defaults().copyWith(
+              preferences: AppPreferences.defaults().copyWith(localeCode: 'kk'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Бір телефонда ойнау'));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byKey(goldenRoot),
+      matchesGoldenFile('goldens/local_setup_phone_kk.png'),
+    );
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('4'));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byKey(goldenRoot),
+      matchesGoldenFile('goldens/local_setup_small_phone_kk.png'),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
 
   testWidgets('main menu and local game phone layouts', (tester) async {
     Get.put<GameFeedback>(const NoopGameFeedback());
@@ -19,7 +69,10 @@ void main() {
     await tester.pumpWidget(
       RepaintBoundary(
         key: goldenRoot,
-        child: TriGridApp(repository: MemoryTriGridRepository()),
+        child: TriGridApp(
+          ambientMotion: false,
+          repository: MemoryTriGridRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -31,8 +84,8 @@ void main() {
 
     await tester.tap(find.text('Play on one phone'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Start match'));
-    await tester.tap(find.text('Start match'));
+    await tester.ensureVisible(find.byTooltip('Start match'));
+    await tester.tap(find.byTooltip('Start match'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -58,12 +111,14 @@ void main() {
         .first;
     session.submitMove(firstMove.start, firstMove.end);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     await expectLater(
       find.byKey(goldenRoot),
       matchesGoldenFile('goldens/handoff_phone.png'),
     );
     session.confirmHandoff();
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
 
     await tester.tap(find.byTooltip('Pause'));
     await tester.pumpAndSettle();
@@ -72,8 +127,8 @@ void main() {
       matchesGoldenFile('goldens/pause_settings_phone.png'),
     );
 
-    await tester.ensureVisible(find.text('Resume'));
-    await tester.tap(find.text('Resume'));
+    await tester.ensureVisible(find.byTooltip('Resume'));
+    await tester.tap(find.byTooltip('Resume'));
     await tester.pump(const Duration(milliseconds: 500));
 
     while (!session.currentState.isGameOver) {
@@ -85,7 +140,8 @@ void main() {
         session.confirmHandoff();
       }
     }
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2200));
+    await tester.pump(const Duration(milliseconds: 500));
     await expectLater(
       find.byKey(goldenRoot),
       matchesGoldenFile('goldens/result_phone.png'),
@@ -102,7 +158,10 @@ void main() {
     await tester.pumpWidget(
       RepaintBoundary(
         key: goldenRoot,
-        child: TriGridApp(repository: MemoryTriGridRepository()),
+        child: TriGridApp(
+          ambientMotion: false,
+          repository: MemoryTriGridRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -157,15 +216,18 @@ void main() {
     await tester.pumpWidget(
       RepaintBoundary(
         key: goldenRoot,
-        child: TriGridApp(repository: MemoryTriGridRepository()),
+        child: TriGridApp(
+          ambientMotion: false,
+          repository: MemoryTriGridRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Play on one phone'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Start match'));
-    await tester.tap(find.text('Start match'));
+    await tester.ensureVisible(find.byTooltip('Start match'));
+    await tester.tap(find.byTooltip('Start match'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -206,7 +268,8 @@ void main() {
         session.confirmHandoff();
       }
     }
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2200));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(
       tester.getSize(find.byKey(const Key('match-result-surface'))),
       rootRect.size,

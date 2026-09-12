@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:trigrid/core/network/protocol/lan_envelope.dart';
+
 import 'acceptance_build_id.dart';
 
 typedef _LanScenarioExpectation = ({
@@ -192,8 +194,8 @@ List<String> verifyLanDeviceMatrixReport(
       '$key has the wrong networkPath.',
     );
     require(
-      evidence['protocolVersion'] == 1,
-      '$key did not use protocol version 1.',
+      evidence['protocolVersion'] == LanEnvelope.currentProtocolVersion,
+      '$key did not use protocol version ${LanEnvelope.currentProtocolVersion}.',
     );
 
     final host = mapAt(evidence, 'hostDevice', '$key.hostDevice');

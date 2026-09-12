@@ -1,3 +1,4 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
 import 'package:trigrid/presentation/widgets/trigrid_board_mark.dart';
@@ -19,9 +20,11 @@ class SplashScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TriGridBoardMark(
-                    size: 82,
-                    semanticsLabel: l10n.boardPreviewLabel,
+                  GameReveal(
+                    child: TriGridBoardMark(
+                      size: 82,
+                      semanticsLabel: l10n.boardPreviewLabel,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(

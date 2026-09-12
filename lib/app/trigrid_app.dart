@@ -10,11 +10,13 @@ import 'package:trigrid/l10n/generated/app_localizations.dart';
 import 'package:trigrid/presentation/screens/main_menu/main_menu_screen.dart';
 import 'package:trigrid/presentation/screens/splash/splash_screen.dart';
 import 'package:trigrid/services/game_feel/game_feedback.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 
 class TriGridApp extends StatefulWidget {
-  const TriGridApp({this.repository, super.key});
+  const TriGridApp({this.repository, this.ambientMotion = true, super.key});
 
   final TriGridRepository? repository;
+  final bool ambientMotion;
 
   @override
   State<TriGridApp> createState() => _TriGridAppState();
@@ -22,6 +24,8 @@ class TriGridApp extends StatefulWidget {
 
 class _TriGridAppState extends State<TriGridApp> {
   late final AppController _appController;
+  final _lightThemes = <bool, ThemeData>{};
+  final _darkThemes = <bool, ThemeData>{};
 
   @override
   void initState() {
@@ -67,11 +71,24 @@ class _TriGridAppState extends State<TriGridApp> {
         AppThemePreference.dark => ThemeMode.dark,
       };
       return GetMaterialApp(
+        customTransition: GameRouteTransition(),
+        transitionDuration: Duration(
+          milliseconds: preferences.gameFeel.reducedMotion ? 90 : 420,
+        ),
+        builder: (context, child) => GameMotionScope(
+          settings: preferences.gameFeel,
+          ambientMotion: widget.ambientMotion,
+          child: child ?? const SizedBox.shrink(),
+        ),
         debugShowCheckedModeBanner: false,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        theme: TriGridTheme.lightWith(highContrast: preferences.highContrast),
-        darkTheme: TriGridTheme.darkWith(
-          highContrast: preferences.highContrast,
+        theme: _lightThemes.putIfAbsent(
+          preferences.highContrast,
+          () => TriGridTheme.lightWith(highContrast: preferences.highContrast),
+        ),
+        darkTheme: _darkThemes.putIfAbsent(
+          preferences.highContrast,
+          () => TriGridTheme.darkWith(highContrast: preferences.highContrast),
         ),
         themeMode: themeMode,
         locale: _appController.selectedLocale,
@@ -83,9 +100,11 @@ class _TriGridAppState extends State<TriGridApp> {
           GlobalWidgetsLocalizations.delegate,
         ],
         localeResolutionCallback: _resolveLocale,
-        home: _appController.isReady.value
-            ? const MainMenuScreen()
-            : const SplashScreen(),
+        home: GameSwitcher(
+          child: _appController.isReady.value
+              ? const MainMenuScreen()
+              : const SplashScreen(),
+        ),
       );
     });
   }

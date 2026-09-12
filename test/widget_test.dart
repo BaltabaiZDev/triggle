@@ -11,10 +11,35 @@ import 'package:trigrid/services/game_feel/game_feedback.dart';
 void main() {
   tearDown(Get.reset);
 
+  testWidgets(
+    'minimal setup keeps Start reachable on a small phone with four seats',
+    (tester) async {
+      Get.put<GameFeedback>(const NoopGameFeedback());
+      await tester.binding.setSurfaceSize(const Size(320, 568));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Play on one phone'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('4'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Start match').hitTestable(), findsOneWidget);
+      expect(find.text('Classic board').hitTestable(), findsOneWidget);
+      expect(find.byType(SwitchListTile), findsNothing);
+      expect(find.byType(DropdownButtonFormField), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('uses Kazakh when the device language is Kazakh', (tester) async {
     tester.binding.platformDispatcher.localesTestValue = const [Locale('kk')];
 
-    await tester.pumpWidget(TriGridApp(repository: MemoryTriGridRepository()));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Бір телефонда ойнау'), findsOneWidget);
@@ -24,11 +49,38 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('solo retains an opponent when the last bot seat is removed', (
+    tester,
+  ) async {
+    Get.put<GameFeedback>(const NoopGameFeedback());
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Solo vs bots'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('3'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('seat-1-human')));
+    await tester.pumpAndSettle();
+    expect(find.text('Player 2'), findsOneWidget);
+    await tester.tap(find.text('2'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bot 2'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('seat-1-human')));
+    await tester.pumpAndSettle();
+    expect(find.text('Bot 2'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('opens a configurable local match and pause overlay', (
     tester,
   ) async {
     Get.put<GameFeedback>(const NoopGameFeedback());
-    await tester.pumpWidget(TriGridApp(repository: MemoryTriGridRepository()));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('TriGrid'), findsOneWidget);
@@ -42,15 +94,15 @@ void main() {
     expect(find.text('Game board'), findsOneWidget);
     expect(find.text('Classic board'), findsOneWidget);
     expect(
-      find.text('37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'),
-      findsOneWidget,
+      find.text('37 pegs · 54 triangles · bands: 14 for 2 players, 16 for 3–4'),
+      findsNothing,
     );
     expect(find.text('Custom rules'), findsNothing);
 
     await tester.tap(find.text('4'));
-    await tester.pump();
-    await tester.ensureVisible(find.text('Start match'));
-    await tester.tap(find.text('Start match'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byTooltip('Start match'));
+    await tester.tap(find.byTooltip('Start match'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -89,9 +141,9 @@ void main() {
     await tester.tap(find.byTooltip('Pause'));
     await tester.pump();
     expect(find.text('Game paused'), findsOneWidget);
-    expect(find.text('Resume'), findsOneWidget);
+    expect(find.byTooltip('Resume'), findsOneWidget);
 
-    await tester.tap(find.text('Resume'));
+    await tester.tap(find.byTooltip('Resume'));
     await tester.pump();
     expect(find.text('Game paused'), findsNothing);
 
@@ -101,21 +153,23 @@ void main() {
 
   testWidgets('configures a mixed human and bot local match', (tester) async {
     Get.put<GameFeedback>(const NoopGameFeedback());
-    await tester.pumpWidget(TriGridApp(repository: MemoryTriGridRepository()));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Play on one phone'));
     await tester.pumpAndSettle();
-    final secondSeat = find.widgetWithText(SwitchListTile, 'Player 2');
+    final secondSeat = find.byKey(const ValueKey('seat-1-bot'));
     expect(secondSeat, findsOneWidget);
     await tester.tap(secondSeat);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('Bot player'), findsOneWidget);
+    expect(find.text('Bot 2'), findsOneWidget);
     expect(find.text('Bot difficulty'), findsOneWidget);
     expect(find.text('Bot personality'), findsNothing);
-    await tester.ensureVisible(find.text('Start match'));
-    await tester.tap(find.text('Start match'));
+    await tester.ensureVisible(find.byTooltip('Start match'));
+    await tester.tap(find.byTooltip('Start match'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -144,7 +198,9 @@ void main() {
   testWidgets('opens LAN create and join flows from the main menu', (
     tester,
   ) async {
-    await tester.pumpWidget(TriGridApp(repository: MemoryTriGridRepository()));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Local network'));
@@ -160,8 +216,8 @@ void main() {
     expect(find.text('Room name'), findsOneWidget);
     expect(find.text('Classic board'), findsOneWidget);
     expect(
-      find.text('37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4'),
-      findsOneWidget,
+      find.text('37 pegs · 54 triangles · bands: 14 for 2 players, 16 for 3–4'),
+      findsNothing,
     );
     expect(find.text('Custom rules'), findsNothing);
     expect(find.text('Create room'), findsOneWidget);
@@ -183,7 +239,9 @@ void main() {
   testWidgets('opens every product surface from the expanded main menu', (
     tester,
   ) async {
-    await tester.pumpWidget(TriGridApp(repository: MemoryTriGridRepository()));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: MemoryTriGridRepository()),
+    );
     await tester.pumpAndSettle();
 
     Future<void> openAndReturn(String menuLabel, String expectedText) async {
@@ -219,7 +277,9 @@ void main() {
     final repository = MemoryTriGridRepository(
       TriGridData.defaults().copyWith(localSnapshot: snapshot),
     );
-    await tester.pumpWidget(TriGridApp(repository: repository));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: repository),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Continue'));
@@ -247,12 +307,14 @@ void main() {
     final repository = MemoryTriGridRepository(
       TriGridData.defaults().copyWith(preferences: preferences),
     );
-    await tester.pumpWidget(TriGridApp(repository: repository));
+    await tester.pumpWidget(
+      TriGridApp(ambientMotion: false, repository: repository),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Play on one phone'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Start match'));
-    await tester.tap(find.text('Start match'));
+    await tester.ensureVisible(find.byTooltip('Start match'));
+    await tester.tap(find.byTooltip('Start match'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
 

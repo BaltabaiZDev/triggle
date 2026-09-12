@@ -18,6 +18,7 @@ class LanHostServer {
     required this.hostSessionToken,
     required this.advertisedAddress,
     required this.lobby,
+    required this.startingPlayerIndex,
     required Duration? turnTimeoutOverride,
     BotMoveProvider botMoveProvider = const BotWorker(),
   }) : _server = server,
@@ -33,6 +34,7 @@ class LanHostServer {
     BoardSize? boardSize,
     Ruleset ruleset = Ruleset.classic,
     int? turnTimeSeconds,
+    int startingPlayerIndex = 0,
     Duration? turnTimeoutOverride,
     BotMoveProvider botMoveProvider = const BotWorker(),
   }) async {
@@ -49,6 +51,7 @@ class LanHostServer {
     final host = LanHostServer._(
       server: server,
       hostSessionToken: hostToken,
+      startingPlayerIndex: startingPlayerIndex,
       advertisedAddress: advertisedAddress ?? await _bestLocalIpv4Address(),
       lobby: LanLobbyState(
         roomId: roomId,
@@ -82,6 +85,7 @@ class LanHostServer {
   final Duration? _turnTimeoutOverride;
   final String hostSessionToken;
   final String advertisedAddress;
+  final int startingPlayerIndex;
   final Map<WebSocket, _ClientContext> _clients = {};
   final Map<String, String> _sessionTokens = {};
   final Map<String, Map<String, Object?>> _acceptedActionPayloads = {};
@@ -117,7 +121,7 @@ class LanHostServer {
     address: advertisedAddress,
     port: port,
     playerCount: lobby.occupiedSeatCount,
-    capacity: lobby.seats.length,
+    capacity: lobby.capacity,
     protocolVersion: LanEnvelope.currentProtocolVersion,
   );
 
@@ -268,7 +272,11 @@ class LanHostServer {
         .trim()
         .toUpperCase();
     final requestedToken = envelope.payload['sessionToken'] as String?;
-    if (playerName.isEmpty || roomCode != lobby.roomCode) {
+    if (roomCode != lobby.roomCode) {
+      _sendError(context, 'invalid_room_code');
+      return;
+    }
+    if (playerName.isEmpty) {
       _sendError(context, 'invalid_room_or_name');
       return;
     }
@@ -293,6 +301,7 @@ class LanHostServer {
         return;
       }
       final emptySeat = lobby.seats
+          .take(lobby.capacity)
           .where((seat) => !seat.isOccupied)
           .firstOrNull;
       if (emptySeat == null) {
@@ -404,6 +413,13 @@ class LanHostServer {
     final boardSize = BoardSize.fromJson(
       payload['boardSize']! as Map<String, Object?>,
     );
+    if (lobby.occupiedSeatCount > boardSize.maximumPlayers ||
+        lobby.seats
+            .skip(boardSize.maximumPlayers)
+            .any((seat) => seat.isOccupied)) {
+      _broadcast(_envelope(LanMessageType.error, {'code': 'board_capacity'}));
+      return;
+    }
     final turnTimeSeconds = payload['turnTimeSeconds'] as int?;
     if (turnTimeSeconds != null &&
         (turnTimeSeconds < 10 || turnTimeSeconds > 300)) {
@@ -439,7 +455,9 @@ class LanHostServer {
       }
       return;
     }
-    if (operation == 'addBot' && !current.isOccupied) {
+    if (operation == 'addBot' &&
+        !current.isOccupied &&
+        index < lobby.capacity) {
       final botSettings = BotSettings.fromJson(
         payload['botSettings']! as Map<String, Object?>,
       );
@@ -501,6 +519,7 @@ class LanHostServer {
         (seed, unit) => (seed * 31 + unit) & 0x7FFFFFFF,
       ),
       turnTimeSeconds: lobby.turnTimeSeconds,
+      startingPlayerIndex: startingPlayerIndex % occupied.length,
     );
     _engine = GameEngine(settings);
     _state = _engine!.createInitialState(settings);
@@ -704,7 +723,9 @@ class LanHostServer {
       return;
     }
     _replaceSeat(index, lobby.seats[index].copyWith(connected: false));
-    if (lobby.started && !lobby.seats[index].isBot) {
+    if (lobby.started &&
+        _state?.isGameOver != true &&
+        !lobby.seats[index].isBot) {
       _botGeneration++;
       _turnTimer?.cancel();
       lobby = lobby.copyWith(gamePaused: true, revision: lobby.revision + 1);
@@ -738,6 +759,7 @@ class LanHostServer {
 
   void resumeGame() {
     if (!lobby.started ||
+        _state?.isGameOver == true ||
         lobby.seats.any(
           (seat) => seat.isOccupied && !seat.isBot && !seat.connected,
         )) {
@@ -756,7 +778,7 @@ class LanHostServer {
       (seat) => seat.playerId == playerId && !seat.connected && !seat.isBot,
     );
     final state = _state;
-    if (seatIndex < 0 || state == null) {
+    if (seatIndex < 0 || state == null || state.isGameOver) {
       return;
     }
     final statePlayerIndex = state.players.indexWhere(
@@ -794,7 +816,7 @@ class LanHostServer {
       (seat) => seat.playerId == playerId && !seat.connected && !seat.isBot,
     );
     final state = _state;
-    if (seatIndex < 0 || state == null) {
+    if (seatIndex < 0 || state == null || state.isGameOver) {
       return;
     }
     final playerIndex = state.players.indexWhere(

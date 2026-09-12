@@ -1,4 +1,7 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
+import 'package:trigrid/presentation/widgets/game_icon_controls.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -31,6 +34,12 @@ class LanLobbyScreen extends StatefulWidget {
 class _LanLobbyScreenState extends State<LanLobbyScreen> {
   StreamSubscription<LanEnvelope>? _messageSubscription;
   StreamSubscription<int>? _latencySubscription;
+  StreamSubscription<LanConnectionStatus>? _statusSubscription;
+  late LanConnectionStatus _status;
+  String? _roomError;
+  Future<void>? _closeFuture;
+  bool _readyToPop = false;
+  bool _leaving = false;
   late LanLobbyState _lobby;
   var _latency = 0;
   var _handedOff = false;
@@ -39,6 +48,10 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
   void initState() {
     super.initState();
     _lobby = widget.client.latestLobby!;
+    _status = widget.client.status;
+    _statusSubscription = widget.client.statusChanges.listen((status) {
+      if (mounted && !_handedOff) setState(() => _status = status);
+    });
     _latency = widget.client.latencyMilliseconds;
     _messageSubscription = widget.client.messages.listen(_handleMessage);
     _latencySubscription = widget.client.latencyChanges.listen((latency) {
@@ -55,13 +68,19 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
     if (!mounted) {
       return;
     }
-    if (envelope.type == LanMessageType.lobbySnapshot) {
+    if (_handedOff) return;
+    if (envelope.type == LanMessageType.hostEnded) {
+      setState(() => _status = LanConnectionStatus.closed);
+    } else if (envelope.type == LanMessageType.error) {
+      setState(() => _roomError = envelope.payload['code'] as String?);
+    } else if (envelope.type == LanMessageType.lobbySnapshot) {
       final previousPlayerCount = _lobby.occupiedSeatCount;
       final nextLobby = LanLobbyState.fromJson(
         envelope.payload['lobby']! as Map<String, Object?>,
       );
       setState(() {
         _lobby = nextLobby;
+        _roomError = null;
       });
       if (nextLobby.occupiedSeatCount > previousPlayerCount &&
           Get.isRegistered<GameFeedback>()) {
@@ -99,32 +118,83 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
     );
   }
 
+  Future<void> _closeRoom() => _closeFuture ??= _closeResources();
+  Future<void> _closeResources() async {
+    await widget.advertiser?.close();
+    await widget.host?.close();
+    await widget.client.close();
+  }
+
+  Future<void> _leave() async {
+    if (_leaving || _handedOff) return;
+    _leaving = true;
+    await _closeRoom();
+    if (!mounted) return;
+    setState(() => _readyToPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _messageSubscription?.cancel();
     _latencySubscription?.cancel();
-    if (!_handedOff) {
-      unawaited(widget.client.close());
-      final advertiser = widget.advertiser;
-      if (advertiser != null) {
-        unawaited(advertiser.close());
-      }
-      final host = widget.host;
-      if (host != null) {
-        unawaited(host.close());
-      }
-    }
+    _statusSubscription?.cancel();
+    if (!_handedOff) unawaited(_closeRoom());
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PopScope(
+    canPop: _readyToPop || _handedOff,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop) unawaited(_leave());
+    },
+    child: _buildPage(context),
+  );
+
+  Widget _buildPage(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final localSeat = _lobby.seats.firstWhere(
-      (seat) => seat.playerId == widget.client.playerId,
-    );
-    return Scaffold(
+    final localSeat = _lobby.seats
+        .where((seat) => seat.playerId == widget.client.playerId)
+        .firstOrNull;
+    if (_status != LanConnectionStatus.connected || localSeat == null) {
+      return GamePage(
+        appBar: AppBar(
+          leading: GamePress(child: BackButton(onPressed: _leave)),
+          title: Text(l10n.lobbyTitle),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 42),
+              const SizedBox(height: 16),
+              Text(
+                _status == LanConnectionStatus.closed
+                    ? l10n.connectionClosed
+                    : l10n.connectionDisconnected,
+              ),
+              const SizedBox(height: 24),
+              GameIconAction(
+                label: l10n.exitToMenu,
+                icon: Icons.home_rounded,
+                primary: true,
+                onPressed: _leave,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return GamePage(
       appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? GamePress(child: BackButton(onPressed: _leave))
+            : null,
         title: Text(l10n.lobbyTitle),
         actions: [
           Padding(
@@ -196,30 +266,16 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
                   ),
                   if (widget.client.isHost) ...[
                     const SizedBox(height: 10),
-                    DropdownButtonFormField<BoardSizePreset>(
-                      initialValue: _lobby.boardSize.preset,
-                      decoration: InputDecoration(
-                        labelText: l10n.boardSizeLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        for (final preset in [
-                          BoardSizePreset.small,
-                          BoardSizePreset.classic,
-                          BoardSizePreset.large,
-                          BoardSizePreset.huge,
-                        ])
-                          DropdownMenuItem(
-                            value: preset,
-                            child: Text(_boardLabel(l10n, preset)),
-                          ),
-                      ],
+                    BoardSizeSelector(
+                      value: _lobby.boardSize.preset,
+                      includeCustom: false,
+                      playerCount:
+                          _lobby.seats.skip(2).any((seat) => seat.isOccupied)
+                          ? 3
+                          : _lobby.occupiedSeatCount,
                       onChanged: _lobby.started
                           ? null
                           : (preset) {
-                              if (preset == null) {
-                                return;
-                              }
                               final board = BoardSize.fromPreset(preset);
                               widget.client.updateRoom(
                                 boardSize: board,
@@ -230,91 +286,116 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
                               );
                             },
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _lobby.boardSize.isClassic
-                          ? l10n.classicBoardDetails
-                          : l10n.scaledBoardDetails,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<int>(
-                      key: ValueKey(_lobby.turnTimeSeconds),
-                      initialValue: _lobby.turnTimeSeconds ?? 0,
-                      decoration: InputDecoration(
-                        labelText: l10n.turnTimerLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 0,
-                          child: Text(l10n.turnTimerOff),
+                    const SizedBox(height: 12),
+                    GamePress(
+                      child: DropdownButtonFormField<int>(
+                        key: ValueKey(_lobby.turnTimeSeconds),
+                        initialValue: _lobby.turnTimeSeconds ?? 0,
+                        decoration: InputDecoration(
+                          labelText: l10n.turnTimerLabel,
+                          border: const OutlineInputBorder(),
                         ),
-                        for (final seconds in [30, 60, 90])
+                        items: [
                           DropdownMenuItem(
-                            value: seconds,
-                            child: Text(l10n.turnTimerSeconds(seconds)),
+                            value: 0,
+                            child: Text(l10n.turnTimerOff),
                           ),
-                      ],
-                      onChanged: _lobby.started
-                          ? null
-                          : (seconds) {
-                              if (seconds != null) {
-                                widget.client.updateRoom(
-                                  boardSize: _lobby.boardSize,
-                                  ruleset: _lobby.ruleset,
-                                  turnTimeSeconds: seconds == 0
-                                      ? null
-                                      : seconds,
-                                );
-                              }
-                            },
+                          for (final seconds in [30, 60, 90])
+                            DropdownMenuItem(
+                              value: seconds,
+                              child: Text(l10n.turnTimerSeconds(seconds)),
+                            ),
+                        ],
+                        onChanged: _lobby.started
+                            ? null
+                            : (seconds) {
+                                if (seconds != null) {
+                                  widget.client.updateRoom(
+                                    boardSize: _lobby.boardSize,
+                                    ruleset: _lobby.ruleset,
+                                    turnTimeSeconds: seconds == 0
+                                        ? null
+                                        : seconds,
+                                  );
+                                }
+                              },
+                      ),
                     ),
                   ],
                   const SizedBox(height: 14),
-                  for (final seat in _lobby.seats) ...[
-                    _SeatCard(
-                      seat: seat,
-                      isHostSeat: seat.playerId == _lobby.hostPlayerId,
-                      isLocalSeat: seat.playerId == widget.client.playerId,
-                      unavailableColors: {
-                        for (final other in _lobby.seats)
-                          if (other.isOccupied &&
-                              other.playerId != widget.client.playerId)
-                            other.colorIndex,
-                      },
-                      canManage:
-                          widget.client.isHost &&
-                          seat.seatIndex > 0 &&
-                          !_lobby.started,
-                      onAddBot: () => widget.client.addBot(
-                        seatIndex: seat.seatIndex,
-                        displayName: l10n.botDefaultName(seat.seatIndex + 1),
-                        settings: BotSettings(difficulty: BotDifficulty.normal),
+                  if (_roomError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        _roomError == 'board_capacity'
+                            ? l10n.smallBoardLimit
+                            : l10n.lanConnectionFailed,
                       ),
-                      onRemove: () => widget.client.removeSeat(seat.seatIndex),
-                      onSelectColor: widget.client.selectColor,
-                      onBotDifficulty: (difficulty) {
-                        widget.client.updateBot(
-                          seatIndex: seat.seatIndex,
-                          settings: seat.botSettings!.copyWith(
-                            difficulty: difficulty,
+                    ),
+                  for (final seat in _lobby.seats.take(_lobby.capacity)) ...[
+                    GamePulse(
+                      value:
+                          '${seat.playerId}:${seat.ready}:${seat.colorIndex}',
+                      child: GameSwitcher(
+                        child: KeyedSubtree(
+                          key: ValueKey(
+                            '${seat.playerId}:${seat.ready}:${seat.colorIndex}',
                           ),
-                        );
-                      },
+                          child: _SeatCard(
+                            seat: seat,
+                            isHostSeat: seat.playerId == _lobby.hostPlayerId,
+                            isLocalSeat:
+                                seat.playerId == widget.client.playerId,
+                            unavailableColors: {
+                              for (final other in _lobby.seats)
+                                if (other.isOccupied &&
+                                    other.playerId != widget.client.playerId)
+                                  other.colorIndex,
+                            },
+                            canManage:
+                                widget.client.isHost &&
+                                seat.seatIndex > 0 &&
+                                !_lobby.started,
+                            onAddBot: () => widget.client.addBot(
+                              seatIndex: seat.seatIndex,
+                              displayName: l10n.botDefaultName(
+                                seat.seatIndex + 1,
+                              ),
+                              settings: BotSettings(
+                                difficulty: BotDifficulty.normal,
+                              ),
+                            ),
+                            onRemove: () =>
+                                widget.client.removeSeat(seat.seatIndex),
+                            onSelectColor: widget.client.selectColor,
+                            onBotDifficulty: (difficulty) {
+                              widget.client.updateBot(
+                                seatIndex: seat.seatIndex,
+                                settings: seat.botSettings!.copyWith(
+                                  difficulty: difficulty,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                   ],
                   if (!widget.client.isHost)
-                    SwitchListTile.adaptive(
-                      value: localSeat.ready,
-                      title: Text(
-                        localSeat.ready
-                            ? l10n.readyStatus
-                            : l10n.notReadyStatus,
+                    GamePress(
+                      child: SwitchListTile.adaptive(
+                        value: localSeat.ready,
+                        title: Text(
+                          localSeat.ready
+                              ? l10n.readyStatus
+                              : l10n.notReadyStatus,
+                        ),
+                        secondary: const Icon(Icons.how_to_reg_rounded),
+                        onChanged: _lobby.started
+                            ? null
+                            : widget.client.setReady,
                       ),
-                      secondary: const Icon(Icons.how_to_reg_rounded),
-                      onChanged: _lobby.started ? null : widget.client.setReady,
                     ),
                   const SizedBox(height: 10),
                   if (widget.client.isHost) ...[
@@ -326,14 +407,16 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                    FilledButton.icon(
-                      onPressed: _lobby.canStart && !_lobby.started
-                          ? widget.client.startMatch
-                          : null,
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        child: Text(l10n.startLanMatch),
+                    GamePress(
+                      child: FilledButton.icon(
+                        onPressed: _lobby.canStart && !_lobby.started
+                            ? widget.client.startMatch
+                            : null,
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          child: Text(l10n.startLanMatch),
+                        ),
                       ),
                     ),
                   ],
@@ -347,7 +430,10 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
   }
 
   void _openGame() {
-    if (_handedOff || !mounted) {
+    if (_handedOff ||
+        _leaving ||
+        !mounted ||
+        _status != LanConnectionStatus.connected) {
       return;
     }
     final state = widget.client.latestGameState;
@@ -355,6 +441,8 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
       return;
     }
     _handedOff = true;
+    // Active matches reject new players; remove their join advertisement now.
+    unawaited(widget.advertiser?.close());
     final feedback = Get.isRegistered<GameFeedback>()
         ? Get.find<GameFeedback>()
         : GameFeedbackCoordinator();
@@ -370,16 +458,6 @@ class _LanLobbyScreenState extends State<LanLobbyScreen> {
       disposeFeedbackOnClose: ownsFeedback,
     );
     Get.off<void>(() => GameScreen(settings: state.settings, session: session));
-  }
-
-  String _boardLabel(AppLocalizations l10n, BoardSizePreset preset) {
-    return switch (preset) {
-      BoardSizePreset.small => l10n.boardSizeSmall,
-      BoardSizePreset.classic => l10n.boardSizeClassic,
-      BoardSizePreset.large => l10n.boardSizeLarge,
-      BoardSizePreset.huge => l10n.boardSizeHuge,
-      BoardSizePreset.custom => l10n.boardSizeCustom,
-    };
   }
 }
 
@@ -415,10 +493,12 @@ class _SeatCard extends StatelessWidget {
           leading: const Icon(Icons.event_seat_outlined),
           title: Text(l10n.openSeat),
           trailing: canManage
-              ? TextButton.icon(
-                  onPressed: onAddBot,
-                  icon: const Icon(Icons.smart_toy_outlined),
-                  label: Text(l10n.addBot),
+              ? GamePress(
+                  child: TextButton.icon(
+                    onPressed: onAddBot,
+                    icon: const Icon(Icons.smart_toy_outlined),
+                    label: Text(l10n.addBot),
+                  ),
                 )
               : null,
         ),
@@ -460,10 +540,12 @@ class _SeatCard extends StatelessWidget {
               ].join(' · '),
             ),
             trailing: canManage && (seat.isBot || !seat.connected)
-                ? IconButton(
-                    tooltip: l10n.removeSeat,
-                    onPressed: onRemove,
-                    icon: const Icon(Icons.remove_circle_outline_rounded),
+                ? GamePress(
+                    child: IconButton(
+                      tooltip: l10n.removeSeat,
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.remove_circle_outline_rounded),
+                    ),
                   )
                 : Icon(
                     seat.ready
@@ -492,18 +574,20 @@ class _SeatCard extends StatelessWidget {
                         for (var index = 0; index < 4; index++)
                           Tooltip(
                             message: _colorLabel(l10n, index),
-                            child: ChoiceChip(
-                              selected: seat.colorIndex == index,
-                              onSelected: unavailableColors.contains(index)
-                                  ? null
-                                  : (_) => onSelectColor(index),
-                              showCheckmark: false,
-                              label: Icon(
-                                _markerIcon(
-                                  PlayerVisuals.forSeat(index).markerShape,
+                            child: GamePress(
+                              child: ChoiceChip(
+                                selected: seat.colorIndex == index,
+                                onSelected: unavailableColors.contains(index)
+                                    ? null
+                                    : (_) => onSelectColor(index),
+                                showCheckmark: false,
+                                label: Icon(
+                                  _markerIcon(
+                                    PlayerVisuals.forSeat(index).markerShape,
+                                  ),
+                                  size: 18,
+                                  color: PlayerVisuals.forSeat(index).color,
                                 ),
-                                size: 18,
-                                color: PlayerVisuals.forSeat(index).color,
                               ),
                             ),
                           ),
@@ -516,25 +600,27 @@ class _SeatCard extends StatelessWidget {
           if (canManage && seat.isBot)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: DropdownButtonFormField<BotDifficulty>(
-                initialValue: seat.botSettings!.difficulty,
-                decoration: InputDecoration(
-                  labelText: l10n.botDifficultyLabel,
-                  isDense: true,
-                  border: const OutlineInputBorder(),
+              child: GamePress(
+                child: DropdownButtonFormField<BotDifficulty>(
+                  initialValue: seat.botSettings!.difficulty,
+                  decoration: InputDecoration(
+                    labelText: l10n.botDifficultyLabel,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final difficulty in BotDifficulty.values)
+                      DropdownMenuItem(
+                        value: difficulty,
+                        child: Text(_difficultyLabel(l10n, difficulty)),
+                      ),
+                  ],
+                  onChanged: (difficulty) {
+                    if (difficulty != null) {
+                      onBotDifficulty(difficulty);
+                    }
+                  },
                 ),
-                items: [
-                  for (final difficulty in BotDifficulty.values)
-                    DropdownMenuItem(
-                      value: difficulty,
-                      child: Text(_difficultyLabel(l10n, difficulty)),
-                    ),
-                ],
-                onChanged: (difficulty) {
-                  if (difficulty != null) {
-                    onBotDifficulty(difficulty);
-                  }
-                },
               ),
             ),
         ],

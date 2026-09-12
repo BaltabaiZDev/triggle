@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:trigrid/core/network/protocol/lan_envelope.dart';
+
 import 'acceptance_build_id.dart';
 
 typedef _LanTemplateScenario = ({
@@ -78,7 +80,7 @@ Map<String, dynamic> createLanDeviceMatrixTemplate(String acceptanceBuildId) {
         'scenarioId': scenario.key,
         'recordedAtUtc': '',
         'networkPath': scenario.value.networkPath,
-        'protocolVersion': 1,
+        'protocolVersion': LanEnvelope.currentProtocolVersion,
         'hostDevice': device(scenario.value.hostPlatform),
         'clientDevice': device(scenario.value.clientPlatform),
         'automaticDiscoveryAttempted': false,

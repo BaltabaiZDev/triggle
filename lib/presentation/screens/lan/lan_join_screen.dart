@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -26,6 +28,7 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
   var _busy = false;
   var _failed = false;
   var _discoveryFailed = false;
+  String? _failureCode;
 
   @override
   void didChangeDependencies() {
@@ -91,8 +94,13 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.joinSetupTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.joinSetupTitle),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -145,15 +153,17 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
                   else
                     for (final room in _rooms)
                       Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.wifi_rounded),
-                          title: Text(room.roomName),
-                          subtitle: Text(
-                            '${room.roomCode} · '
-                            '${l10n.playersConnected(room.playerCount)}',
+                        child: GamePress(
+                          child: ListTile(
+                            leading: const Icon(Icons.wifi_rounded),
+                            title: Text(room.roomName),
+                            subtitle: Text(
+                              '${room.roomCode} · '
+                              '${l10n.playersConnected(room.playerCount)}',
+                            ),
+                            trailing: const Icon(Icons.login_rounded),
+                            onTap: _busy ? null : () => _connectRoom(room),
                           ),
-                          trailing: const Icon(Icons.login_rounded),
-                          onTap: _busy ? null : () => _connectRoom(room),
                         ),
                       ),
                   const SizedBox(height: 14),
@@ -165,10 +175,12 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _busy ? null : _scanQr,
-                        icon: const Icon(Icons.qr_code_scanner_rounded),
-                        label: Text(l10n.scanQr),
+                      GamePress(
+                        child: TextButton.icon(
+                          onPressed: _busy ? null : _scanQr,
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                          label: Text(l10n.scanQr),
+                        ),
                       ),
                     ],
                   ),
@@ -199,7 +211,7 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
                           if (_failed) ...[
                             const SizedBox(height: 10),
                             Text(
-                              l10n.lanConnectionFailed,
+                              _failureText(l10n),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),
@@ -208,17 +220,19 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
                           const SizedBox(height: 14),
                           SizedBox(
                             width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: _busy ? null : _manualConnect,
-                              icon: _busy
-                                  ? const SizedBox.square(
-                                      dimension: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.login_rounded),
-                              label: Text(l10n.connectToRoom),
+                            child: GamePress(
+                              child: FilledButton.icon(
+                                onPressed: _busy ? null : _manualConnect,
+                                icon: _busy
+                                    ? const SizedBox.square(
+                                        dimension: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.login_rounded),
+                                label: Text(l10n.connectToRoom),
+                              ),
                             ),
                           ),
                         ],
@@ -247,8 +261,26 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
       setState(() => _failed = true);
       return;
     }
-    unawaited(_connect('ws://$host:${LanHostServer.defaultPort}/ws', code));
+    try {
+      unawaited(_connect(LanClientConnection.urlForHost(host), code));
+    } on FormatException {
+      setState(() {
+        _failed = true;
+        _failureCode = null;
+      });
+    }
   }
+
+  String _failureText(AppLocalizations l10n) => switch (_failureCode) {
+    'invalid_room_code' => l10n.lanWrongCode,
+    'room_full' => l10n.lanRoomFull,
+    'match_already_started' => l10n.lanRoomStarted,
+    'host_ended' ||
+    'invalid_session_token' ||
+    'reconnect_seat_missing' => l10n.lanRoomClosed,
+    'incompatible_protocol' => l10n.lanVersionMismatch,
+    _ => l10n.lanConnectionFailed,
+  };
 
   Future<void> _scanQr() async {
     final link = await Get.to<LanJoinLink>(() => const LanQrScannerScreen());
@@ -270,6 +302,7 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
     setState(() {
       _busy = true;
       _failed = false;
+      _failureCode = null;
     });
     LanClientConnection? client;
     try {
@@ -289,12 +322,13 @@ class _LanJoinScreenState extends State<LanJoinScreen> {
         return;
       }
       await Get.off<void>(() => LanLobbyScreen(client: client!));
-    } on Object {
+    } on Object catch (error) {
       await client?.close();
       if (mounted) {
         setState(() {
           _busy = false;
           _failed = true;
+          _failureCode = error is LanConnectionException ? error.code : null;
         });
       }
     }

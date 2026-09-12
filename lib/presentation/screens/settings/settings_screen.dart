@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -38,8 +40,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.appSettingsTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.appSettingsTitle),
+      ),
       body: SafeArea(
         child: Obx(() {
           final preferences = _controller.preferences.value;
@@ -60,82 +67,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey(preferences.localeCode),
-                    initialValue: preferences.localeCode ?? 'system',
-                    decoration: InputDecoration(
-                      labelText: l10n.languageLabel,
-                      border: const OutlineInputBorder(),
+                  GamePress(
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey(preferences.localeCode),
+                      initialValue: preferences.localeCode ?? 'system',
+                      decoration: InputDecoration(
+                        labelText: l10n.languageLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'system',
+                          child: Text(l10n.languageSystem),
+                        ),
+                        DropdownMenuItem(
+                          value: 'en',
+                          child: Text(l10n.languageEnglish),
+                        ),
+                        DropdownMenuItem(
+                          value: 'kk',
+                          child: Text(l10n.languageKazakh),
+                        ),
+                        DropdownMenuItem(
+                          value: 'ru',
+                          child: Text(l10n.languageRussian),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        _update(
+                          value == 'system'
+                              ? preferences.copyWith(clearLocale: true)
+                              : preferences.copyWith(localeCode: value),
+                        );
+                      },
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'system',
-                        child: Text(l10n.languageSystem),
-                      ),
-                      DropdownMenuItem(
-                        value: 'en',
-                        child: Text(l10n.languageEnglish),
-                      ),
-                      DropdownMenuItem(
-                        value: 'kk',
-                        child: Text(l10n.languageKazakh),
-                      ),
-                      DropdownMenuItem(
-                        value: 'ru',
-                        child: Text(l10n.languageRussian),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      _update(
-                        value == 'system'
-                            ? preferences.copyWith(clearLocale: true)
-                            : preferences.copyWith(localeCode: value),
-                      );
-                    },
                   ),
                 ],
               ),
               _SettingsSection(
                 title: l10n.appearanceTitle,
                 children: [
-                  DropdownButtonFormField<AppThemePreference>(
-                    key: ValueKey(preferences.themePreference),
-                    initialValue: preferences.themePreference,
-                    decoration: InputDecoration(
-                      labelText: l10n.themeLabel,
-                      border: const OutlineInputBorder(),
+                  GamePress(
+                    child: DropdownButtonFormField<AppThemePreference>(
+                      key: ValueKey(preferences.themePreference),
+                      initialValue: preferences.themePreference,
+                      decoration: InputDecoration(
+                        labelText: l10n.themeLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: AppThemePreference.system,
+                          child: Text(l10n.themeSystem),
+                        ),
+                        DropdownMenuItem(
+                          value: AppThemePreference.light,
+                          child: Text(l10n.themeLight),
+                        ),
+                        DropdownMenuItem(
+                          value: AppThemePreference.dark,
+                          child: Text(l10n.themeDark),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          _update(preferences.copyWith(themePreference: value));
+                        }
+                      },
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: AppThemePreference.system,
-                        child: Text(l10n.themeSystem),
-                      ),
-                      DropdownMenuItem(
-                        value: AppThemePreference.light,
-                        child: Text(l10n.themeLight),
-                      ),
-                      DropdownMenuItem(
-                        value: AppThemePreference.dark,
-                        child: Text(l10n.themeDark),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        _update(preferences.copyWith(themePreference: value));
-                      }
-                    },
                   ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: preferences.highContrast,
-                    title: Text(l10n.highContrast),
-                    subtitle: Text(l10n.highContrastDescription),
-                    onChanged: (value) {
-                      _update(preferences.copyWith(highContrast: value));
-                    },
+                  GamePress(
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: preferences.highContrast,
+                      title: Text(l10n.highContrast),
+                      subtitle: Text(l10n.highContrastDescription),
+                      onChanged: (value) {
+                        _update(preferences.copyWith(highContrast: value));
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -143,46 +156,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: l10n.audioTitle,
                 children: [
                   _VolumeSlider(
+                    label: l10n.musicVolume,
+                    value: feel.musicVolume,
+                    onChanged: (value) =>
+                        _updateFeel(feel.copyWith(musicVolume: value)),
+                  ),
+                  _VolumeSlider(
                     label: l10n.soundEffectsVolume,
                     value: feel.soundEffectsVolume,
                     onChanged: (value) =>
                         _updateFeel(feel.copyWith(soundEffectsVolume: value)),
                   ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: feel.muted,
-                    title: Text(l10n.muteAll),
-                    onChanged: (value) =>
-                        _updateFeel(feel.copyWith(muted: value)),
+                  GamePress(
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: feel.muted,
+                      title: Text(l10n.muteAll),
+                      onChanged: (value) =>
+                          _updateFeel(feel.copyWith(muted: value)),
+                    ),
                   ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: feel.haptics,
-                    title: Text(l10n.haptics),
-                    onChanged: (value) =>
-                        _updateFeel(feel.copyWith(haptics: value)),
+                  GamePress(
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: feel.haptics,
+                      title: Text(l10n.haptics),
+                      onChanged: (value) =>
+                          _updateFeel(feel.copyWith(haptics: value)),
+                    ),
                   ),
                 ],
               ),
               _SettingsSection(
                 title: l10n.accessibilityTitle,
                 children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: preferences.confirmMoves,
-                    title: Text(l10n.confirmMoves),
-                    subtitle: Text(l10n.confirmMovesDescription),
-                    onChanged: (value) {
-                      _update(preferences.copyWith(confirmMoves: value));
-                    },
+                  GamePress(
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: preferences.confirmMoves,
+                      title: Text(l10n.confirmMoves),
+                      subtitle: Text(l10n.confirmMovesDescription),
+                      onChanged: (value) {
+                        _update(preferences.copyWith(confirmMoves: value));
+                      },
+                    ),
                   ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: feel.reducedMotion,
-                    title: Text(l10n.reducedMotion),
-                    subtitle: Text(l10n.reducedMotionDescription),
-                    onChanged: (value) =>
-                        _updateFeel(feel.copyWith(reducedMotion: value)),
+                  GamePress(
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: feel.reducedMotion,
+                      title: Text(l10n.reducedMotion),
+                      subtitle: Text(l10n.reducedMotionDescription),
+                      onChanged: (value) =>
+                          _updateFeel(feel.copyWith(reducedMotion: value)),
+                    ),
                   ),
                 ],
               ),
@@ -252,10 +279,12 @@ class _VolumeSlider extends StatelessWidget {
       children: [
         SizedBox(width: 112, child: Text(label)),
         Expanded(
-          child: Slider(
-            value: value,
-            label: '${(value * 100).round()}%',
-            onChanged: onChanged,
+          child: GamePress(
+            child: Slider(
+              value: value,
+              label: '${(value * 100).round()}%',
+              onChanged: onChanged,
+            ),
           ),
         ),
       ],

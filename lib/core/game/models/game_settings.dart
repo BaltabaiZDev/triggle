@@ -10,7 +10,12 @@ class GameSettings {
     required List<PlayerConfiguration> players,
     required int seed,
     int? turnTimeSeconds,
+    int rulesVersion = currentRulesVersion,
+    int startingPlayerIndex = 0,
   }) {
+    if (rulesVersion < 1 || rulesVersion > currentRulesVersion) {
+      throw FormatException('Unsupported rules version $rulesVersion.');
+    }
     if (matchId.trim().isEmpty) {
       throw ArgumentError.value(
         matchId,
@@ -20,6 +25,21 @@ class GameSettings {
     }
     if (players.length < 2 || players.length > 4) {
       throw RangeError.range(players.length, 2, 4, 'players.length');
+    }
+    if (rulesVersion >= 2 && players.length > boardSize.maximumPlayers) {
+      throw ArgumentError(
+        'This board supports at most ${boardSize.maximumPlayers} players.',
+      );
+    }
+    if (startingPlayerIndex < 0 || startingPlayerIndex >= players.length) {
+      throw RangeError.index(
+        startingPlayerIndex,
+        players,
+        'startingPlayerIndex',
+      );
+    }
+    if (rulesVersion == 1 && startingPlayerIndex != 0) {
+      throw ArgumentError('Legacy rules always start with the first seat.');
     }
     final playerIds = players.map((player) => player.id).toSet();
     if (playerIds.length != players.length) {
@@ -39,6 +59,8 @@ class GameSettings {
       players: List<PlayerConfiguration>.unmodifiable(players),
       seed: seed,
       turnTimeSeconds: turnTimeSeconds,
+      rulesVersion: rulesVersion,
+      startingPlayerIndex: startingPlayerIndex,
     );
   }
 
@@ -49,6 +71,8 @@ class GameSettings {
     required this.players,
     required this.seed,
     required this.turnTimeSeconds,
+    required this.rulesVersion,
+    required this.startingPlayerIndex,
   });
 
   factory GameSettings.fromJson(Map<String, Object?> json) {
@@ -59,7 +83,7 @@ class GameSettings {
       );
     }
     final rulesVersion = json['rulesVersion']! as int;
-    if (rulesVersion != currentRulesVersion) {
+    if (rulesVersion < 1 || rulesVersion > currentRulesVersion) {
       throw FormatException('Unsupported rules version $rulesVersion.');
     }
     return GameSettings(
@@ -74,11 +98,13 @@ class GameSettings {
           .toList(),
       seed: json['seed']! as int,
       turnTimeSeconds: json['turnTimeSeconds'] as int?,
+      rulesVersion: rulesVersion,
+      startingPlayerIndex: json['startingPlayerIndex'] as int? ?? 0,
     );
   }
 
   static const currentSchemaVersion = 1;
-  static const currentRulesVersion = 1;
+  static const currentRulesVersion = SupplyPolicy.currentRulesVersion;
 
   final String matchId;
   final BoardSize boardSize;
@@ -86,10 +112,26 @@ class GameSettings {
   final List<PlayerConfiguration> players;
   final int seed;
   final int? turnTimeSeconds;
+  final int rulesVersion;
+  final int startingPlayerIndex;
+
+  GameSettings nextRound({required String matchId}) => GameSettings(
+    matchId: matchId,
+    boardSize: boardSize,
+    ruleset: ruleset,
+    players: players,
+    seed: seed + 1,
+    turnTimeSeconds: turnTimeSeconds,
+    rulesVersion: rulesVersion,
+    startingPlayerIndex: rulesVersion >= 2
+        ? (startingPlayerIndex + 1) % players.length
+        : 0,
+  );
 
   Map<String, Object?> toJson() => {
     'schemaVersion': currentSchemaVersion,
-    'rulesVersion': currentRulesVersion,
+    'rulesVersion': rulesVersion,
+    if (rulesVersion >= 2) 'startingPlayerIndex': startingPlayerIndex,
     'matchId': matchId,
     'boardSize': boardSize.toJson(),
     'ruleset': ruleset.name,

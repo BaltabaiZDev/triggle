@@ -10,10 +10,10 @@ void main() {
   final sounds = <String, _SoundSpec>{
     'peg_touch.wav': const _SoundSpec(0.08, [720], decay: 18),
     'elastic_stretch.wav': const _SoundSpec(
-      0.38,
-      [210, 280, 390, 520],
+      0.14,
+      [480, 640],
       sweep: true,
-      decay: 2.2,
+      decay: 5,
     ),
     'elastic_snap.wav': const _SoundSpec(0.2, [980, 620, 330], decay: 13),
     'invalid_move.wav': const _SoundSpec(
@@ -72,6 +72,7 @@ void main() {
 Float64List _renderSound(_SoundSpec spec) {
   final sampleCount = (spec.duration * _sampleRate).round();
   final samples = Float64List(sampleCount);
+  var phase = 0.0;
   for (var index = 0; index < sampleCount; index++) {
     final time = index / _sampleRate;
     final normalized = index / sampleCount;
@@ -93,7 +94,7 @@ Float64List _renderSound(_SoundSpec spec) {
         math.min(1, time * 90) *
         math.exp(-spec.decay * normalized) *
         math.min(1, (1 - normalized) * 18);
-    final phase = 2 * math.pi * frequency * time;
+    phase += 2 * math.pi * frequency / _sampleRate;
     final sine = math.sin(phase) + 0.22 * math.sin(phase * 2.01);
     final square = math.sin(phase) >= 0 ? 1.0 : -1.0;
     samples[index] =
@@ -137,7 +138,9 @@ Float64List _renderMusicLoop() {
     final pad =
         math.sin(2 * math.pi * 65.41 * time) +
         math.sin(2 * math.pi * 98.00 * time);
-    samples[index] = (melody * envelope * 0.07) + (pad * 0.018);
+    // Zero-ended seam; quiet plucked melody over a warm pad, no loop click.
+    final seam = math.min(1.0, math.min(time, duration - time) / 0.055);
+    samples[index] = ((melody * envelope * 0.07) + (pad * 0.018)) * seam;
   }
   return samples;
 }

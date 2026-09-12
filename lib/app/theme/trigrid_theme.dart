@@ -61,6 +61,7 @@ abstract final class TriGridTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffoldBackgroundColor,
       useMaterial3: true,
+      fontFamily: 'Roboto',
       splashFactory: InkSplash.splashFactory,
       visualDensity: VisualDensity.compact,
       textTheme: const TextTheme(
@@ -83,6 +84,7 @@ abstract final class TriGridTheme {
         centerTitle: true,
         toolbarHeight: 44,
         titleTextStyle: TextStyle(
+          fontFamily: 'Roboto',
           color: displayColor,
           fontSize: 18,
           fontWeight: FontWeight.w700,
@@ -91,7 +93,8 @@ abstract final class TriGridTheme {
       ),
       cardTheme: CardThemeData(
         color: colorScheme.surface.withValues(alpha: 0.94),
-        elevation: 0,
+        elevation: 3,
+        shadowColor: Colors.black54,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
@@ -103,13 +106,19 @@ abstract final class TriGridTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          elevation: 3,
+          shadowColor: Colors.black54,
           minimumSize: const Size(44, 40),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
             side: BorderSide(color: borderColor, width: 2),
           ),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -118,7 +127,10 @@ abstract final class TriGridTheme {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           side: BorderSide(color: borderColor.withValues(alpha: 0.9), width: 2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

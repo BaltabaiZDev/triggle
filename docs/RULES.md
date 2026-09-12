@@ -1,8 +1,12 @@
 # TriGrid Rules
 
-Status: canonical product rules, version 1  
-Classic rules must not be changed silently. Any future clarification changes
-this document and the rules version before it changes engine behavior.
+Status: product rules, version 2 (2026-09-12).
+
+The requested larger band supply is an explicit versioned change. New matches
+use v2; saved v1 matches and replays still load with their original 10/12-band
+Classic supplies, original custom formula, first seat, and state hashes. New
+LAN matches require protocol 2 on every device. Geometry, move legality,
+capturing, scoring, and ties are unchanged.
 
 ## 1. Objective
 
@@ -36,20 +40,22 @@ four-peg band templates.
 ## 3. Match setup
 
 A match has two, three, or four seats. Each seat is occupied by a human or bot.
-Board size is selected independently of the number of seats.
+Board size remains selectable independently, except radius 2 is limited to two
+players in v2. Choosing a third/fourth local player on Small promotes the board
+to Classic. A LAN host cannot shrink a board if occupied seats would be lost.
 
 ### Classic, two players
 
 - Classic radius-3 board
-- 10 bands per player
+- 14 bands per player (v1: 10)
 - 21 capture markers available per player
-- the match ends after both players use all 10 bands, unless no legal move
+- the match ends after both players use all 14 bands, unless no legal move
   remains earlier
 
 ### Classic, three or four players
 
 - Classic radius-3 board
-- 12 bands per player
+- 16 bands per player (v1: 12)
 - 21 capture markers per player
 - a player must make a legal move on their turn when one is available
 
@@ -111,6 +117,12 @@ one deterministic action.
 Turns advance in configured seat order. A player with no bands remaining is
 skipped. A player may not voluntarily pass when a legal move is available.
 
+V2 records `startingPlayerIndex` in match settings. Restarting locally creates
+a new match ID and rotates the first seat; replaying keeps the original ID,
+seed, rules version, and first seat. Fresh local/LAN setups rotate by completed
+local/LAN match count respectively. Alternation spreads turn-order advantage
+across rounds; it does not promise a balanced result in every single match.
+
 If no legal band template remains for the current board state, the match ends.
 Because all active players share the same board geometry, legality differs by
 seat only when a seat has no bands remaining.
@@ -122,7 +134,7 @@ before requesting another turn.
 
 ### Classic, two players
 
-The match ends when both players have used 10 bands or when no legal move
+The match ends when both players have used 14 bands (10 in v1) or when no legal move
 remains earlier.
 
 ### Classic, three or four players
@@ -149,7 +161,7 @@ rules, but use **Custom rules** supply limits:
 ```text
 T = 6R²                         // unit triangles
 M = 9R² - 9R - 6               // band templates
-B = 10 for two players, else 12
+B = 14 for two players, else 16   // v1: 10 / 12
 
 bands per player =
   min(max(1, round(B × M / 48)), max(1, floor(M / playerCount)))
@@ -158,7 +170,11 @@ markers per player =
   max(1, round(21 × T / 54))
 ```
 
-The fair-share cap ensures total initial bands never exceed the number of
+V2 radius-2 matches use 6 bands per player, covering all 12 possible templates
+between two players. The formula still determines their marker supply (9).
+This is a special supply override, not a new capture or scoring rule.
+
+For scaled non-Classic boards, the fair-share cap ensures total initial bands never exceed the number of
 distinct move templates. Custom matches end when a player reaches the custom
 marker limit, all supplied bands are exhausted, or no legal move remains. Ties
 are supported.

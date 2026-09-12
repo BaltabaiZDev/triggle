@@ -56,7 +56,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get classicBoardDetails =>
-      '37 колышков · 54 треугольника · резинки: 10 для 2 игроков, 12 для 3–4';
+      '37 точек · 54 треугольника · резинки: 14 для 2 игроков, 16 для 3–4';
 
   @override
   String get scaledBoardDetails =>
@@ -634,7 +634,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rulesBoardsBody =>
-      'Классическое поле имеет радиус 3, 37 колышков и 54 треугольника. Два игрока получают по 10 резинок, три или четыре — по 12. Для других размеров действует явно отмеченный расчёт пользовательских запасов.';
+      'На классическом поле 37 колышков и 54 треугольника. Два игрока получают по 14 резинок, три или четыре — по 16. На малом поле играют только двое, по 6 резинок у каждого. На других полях запас зависит от размера. При перезапуске раунда первый игрок меняется.';
 
   @override
   String get botGuideTitle => 'Сила ботов';
@@ -942,4 +942,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String debugStateHash(String value) {
     return 'Хэш $value';
   }
+
+  @override
+  String get lanWrongCode => 'Неверный код комнаты.';
+
+  @override
+  String get lanRoomFull => 'В комнате нет свободных мест.';
+
+  @override
+  String get lanRoomStarted => 'Матч уже начался.';
+
+  @override
+  String get lanRoomClosed => 'Комната закрыта. Выберите новую.';
+
+  @override
+  String get lanVersionMismatch => 'Обновите игру на всех устройствах.';
+
+  @override
+  String get smallBoardLimit => 'Малое поле · 2 игрока';
 }

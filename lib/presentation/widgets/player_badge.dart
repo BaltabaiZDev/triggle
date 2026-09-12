@@ -1,3 +1,4 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:trigrid/core/game/trigrid_engine.dart';
 import 'package:trigrid/game/rendering/player_visuals.dart';
@@ -19,81 +20,86 @@ class PlayerBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final visuals = PlayerVisuals.forSeat(player.visualIndex);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 8 : 10,
-        vertical: compact ? 4 : 7,
-      ),
-      decoration: BoxDecoration(
-        color: isActive
-            ? visuals.color.withValues(alpha: 0.72)
-            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.black, width: 2),
-        boxShadow: const [
-          BoxShadow(color: Colors.black87, offset: Offset(2, 2)),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedScale(
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOutBack,
-            scale: isActive ? 1.12 : 1,
-            child: Icon(
-              _markerIcon(visuals.markerShape),
-              color: visuals.color,
-              size: compact ? 15 : 18,
+    return GamePulse(
+      value: '${player.score}:$isActive',
+      color: visuals.color,
+      child: AnimatedContainer(
+        duration: GameMotionScope.duration(context, 240),
+        curve: const GameSpringCurve(),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 4 : 7,
+        ),
+        decoration: BoxDecoration(
+          color: isActive
+              ? visuals.color.withValues(alpha: 0.72)
+              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.black, width: 2),
+          boxShadow: const [
+            BoxShadow(color: Colors.black87, offset: Offset(2, 2)),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              duration: GameMotionScope.duration(context, 240),
+              curve: Curves.easeOutBack,
+              scale: isActive ? 1.12 : 1,
+              child: Icon(
+                _markerIcon(visuals.markerShape),
+                color: visuals.color,
+                size: compact ? 15 : 18,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: compact
-                ? TweenAnimationBuilder<int>(
-                    tween: IntTween(begin: 0, end: player.score),
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, score, _) => Text(
-                      '${player.displayName} · $score',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isActive
-                            ? FontWeight.w800
-                            : FontWeight.w600,
-                      ),
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        player.displayName,
+            const SizedBox(width: 6),
+            Flexible(
+              child: compact
+                  ? TweenAnimationBuilder<int>(
+                      tween: IntTween(begin: 0, end: player.score),
+                      duration: GameMotionScope.duration(context, 260),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, score, _) => Text(
+                        '${player.displayName} · $score',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
+                          fontSize: 12,
                           fontWeight: isActive
                               ? FontWeight.w800
                               : FontWeight.w600,
                         ),
                       ),
-                      TweenAnimationBuilder<int>(
-                        tween: IntTween(begin: 0, end: player.score),
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, score, _) => Text(
-                          l10n.scoreLabel(score),
-                          style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          player.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: isActive
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
+                        TweenAnimationBuilder<int>(
+                          tween: IntTween(begin: 0, end: player.score),
+                          duration: GameMotionScope.duration(context, 260),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, score, _) => Text(
+                            l10n.scoreLabel(score),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

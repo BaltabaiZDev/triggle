@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -15,8 +17,13 @@ class ReplayLibraryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = Get.find<AppController>();
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.replayLibraryTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.replayLibraryTitle),
+      ),
       body: SafeArea(
         child: Obx(() {
           if (controller.replays.isEmpty && controller.lanSnapshots.isEmpty) {
@@ -89,10 +96,12 @@ class _LanSnapshotCard extends StatelessWidget {
           '${l10n.savedLanPosition} · $date · '
           '${l10n.networkRevision(snapshot.state.revision)}',
         ),
-        trailing: IconButton(
-          tooltip: l10n.deleteSavedPosition,
-          onPressed: onDelete,
-          icon: const Icon(Icons.delete_outline_rounded),
+        trailing: GamePress(
+          child: IconButton(
+            tooltip: l10n.deleteSavedPosition,
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded),
+          ),
         ),
       ),
     );
@@ -144,19 +153,23 @@ class _ReplayCard extends StatelessWidget {
         .map((player) => player.displayName)
         .join(' · ');
     return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.fromLTRB(12, 5, 4, 5),
-        leading: const Icon(Icons.replay_rounded, size: 20),
-        title: Text(players, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          '${entry.mode == MatchMode.local ? l10n.localMode : l10n.lanMode}'
-          ' · $date · ${l10n.replayMoveCount(replay.actions.length)}',
-        ),
-        onTap: onPlay,
-        trailing: IconButton(
-          tooltip: l10n.deleteReplay,
-          onPressed: onDelete,
-          icon: const Icon(Icons.close_rounded, size: 18),
+      child: GamePress(
+        child: ListTile(
+          contentPadding: const EdgeInsets.fromLTRB(12, 5, 4, 5),
+          leading: const Icon(Icons.replay_rounded, size: 20),
+          title: Text(players, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            '${entry.mode == MatchMode.local ? l10n.localMode : l10n.lanMode}'
+            ' · $date · ${l10n.replayMoveCount(replay.actions.length)}',
+          ),
+          onTap: onPlay,
+          trailing: GamePress(
+            child: IconButton(
+              tooltip: l10n.deleteReplay,
+              onPressed: onDelete,
+              icon: const Icon(Icons.close_rounded, size: 18),
+            ),
+          ),
         ),
       ),
     );

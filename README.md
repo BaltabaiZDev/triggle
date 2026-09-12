@@ -1,5 +1,9 @@
 # TriGrid
 
+Latest update: [September polish and LAN recovery](docs/SEPTEMBER_POLISH.md).
+New matches use larger supplies (rules v2); LAN protocol is now v2, so update
+every participating device together. Existing v1 local saves/replays remain readable.
+
 <p align="center">
   <img src="assets/branding/triggle_app_icon.png" width="180" alt="TriGrid game logo">
 </p>

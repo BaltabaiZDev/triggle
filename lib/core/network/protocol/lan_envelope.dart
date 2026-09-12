@@ -65,7 +65,8 @@ class LanEnvelope {
     return LanEnvelope.fromJson(decoded);
   }
 
-  static const currentProtocolVersion = 1;
+  // Rules v2 changes supplies; older clients must not silently replay v1 rules.
+  static const currentProtocolVersion = 2;
 
   final int protocolVersion;
   final LanMessageType type;

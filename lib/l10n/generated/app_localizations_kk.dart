@@ -55,7 +55,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get classicBoardDetails =>
-      '37 шеге · 54 үшбұрыш · резеңке: 2 ойыншыға 10, 3–4 ойыншыға 12';
+      '37 нүкте · 54 үшбұрыш · резеңке: 2 ойыншыға 14, 3–4 ойыншыға 16';
 
   @override
   String get scaledBoardDetails =>
@@ -634,7 +634,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesBoardsBody =>
-      'Классикалық алаңның радиусы 3, онда 37 қазық және 54 үшбұрыш бар. Екі ойыншыға 10-нан, үш не төрт ойыншыға 12-ден резеңке беріледі. Басқа өлшемдерде арнайы қор формуласы қолданылады.';
+      'Классикалық алаңда 37 қазық және 54 үшбұрыш бар. Екі ойыншыға 14-тен, үш не төрт ойыншыға 16-дан резеңке беріледі. Шағын алаңда екі ойыншы ғана ойнайды, әрқайсысына 6 резеңке беріледі. Басқа өлшемдерде қор алаңға сай есептеледі. Қайта бастағанда бірінші жүретін ойыншы ауысады.';
 
   @override
   String get botGuideTitle => 'Бот деңгейлері';
@@ -939,4 +939,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String debugStateHash(String value) {
     return 'Хэш $value';
   }
+
+  @override
+  String get lanWrongCode => 'Бөлме коды қате.';
+
+  @override
+  String get lanRoomFull => 'Бөлмеде бос орын жоқ.';
+
+  @override
+  String get lanRoomStarted => 'Матч басталып кеткен.';
+
+  @override
+  String get lanRoomClosed => 'Бөлме жабылған. Жаңа бөлмені таңдаңыз.';
+
+  @override
+  String get lanVersionMismatch => 'Барлық құрылғыдағы ойынды жаңартыңыз.';
+
+  @override
+  String get smallBoardLimit => 'Кіші алаң · 2 ойыншы';
 }

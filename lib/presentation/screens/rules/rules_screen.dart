@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
 
@@ -23,8 +25,13 @@ class RulesScreen extends StatelessWidget {
       (Icons.emoji_events_rounded, l10n.rulesEndingTitle, l10n.rulesEndingBody),
       (Icons.grid_4x4_rounded, l10n.rulesBoardsTitle, l10n.rulesBoardsBody),
     ];
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.rulesTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.rulesTitle),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),

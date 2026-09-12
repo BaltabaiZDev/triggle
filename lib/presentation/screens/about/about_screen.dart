@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
 import 'package:trigrid/presentation/widgets/trigrid_board_mark.dart';
@@ -8,8 +10,13 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.aboutTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.aboutTitle),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
@@ -49,16 +56,18 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
             const Divider(),
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.thirdPartyLicenses),
-              subtitle: Text(l10n.thirdPartyLicensesDescription),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => showLicensePage(
-                context: context,
-                applicationName: l10n.appTitle,
-                applicationVersion: '1.0.0',
+            GamePress(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                leading: const Icon(Icons.description_outlined),
+                title: Text(l10n.thirdPartyLicenses),
+                subtitle: Text(l10n.thirdPartyLicensesDescription),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: l10n.appTitle,
+                  applicationVersion: '1.0.0',
+                ),
               ),
             ),
             const Divider(),

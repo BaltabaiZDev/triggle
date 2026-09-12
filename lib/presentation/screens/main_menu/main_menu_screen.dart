@@ -1,3 +1,4 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:trigrid/app/controllers/app_controller.dart';
@@ -36,71 +37,95 @@ class MainMenuScreen extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Column(
                   children: [
+                    GameReveal(
+                      child: GameFloat(
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [
+                                theme.colorScheme.primary.withValues(
+                                  alpha: 0.16,
+                                ),
+                                theme.colorScheme.primary.withValues(alpha: 0),
+                              ],
+                            ),
+                          ),
+                          child: TriGridBoardMark(
+                            size: 164,
+                            semanticsLabel: l10n.boardPreviewLabel,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        TriGridBoardMark(
-                          size: 64,
-                          semanticsLabel: l10n.boardPreviewLabel,
-                        ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 44),
                         Expanded(
                           child: Text(
                             l10n.appTitle,
+                            textAlign: TextAlign.center,
                             style: theme.textTheme.displaySmall,
                           ),
                         ),
-                        PopupMenuButton<_MenuDestination>(
-                          tooltip: MaterialLocalizations.of(
-                            context,
-                          ).moreButtonTooltip,
-                          icon: const Icon(Icons.more_horiz_rounded),
-                          onSelected: _openSecondary,
-                          itemBuilder: (context) => [
-                            _menuItem(
-                              _MenuDestination.tutorial,
-                              Icons.school_outlined,
-                              l10n.tutorialTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.rules,
-                              Icons.menu_book_outlined,
-                              l10n.rulesTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.settings,
-                              Icons.settings_outlined,
-                              l10n.appSettingsTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.statistics,
-                              Icons.bar_chart_rounded,
-                              l10n.statisticsTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.replays,
-                              Icons.movie_filter_outlined,
-                              l10n.replayLibraryTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.bots,
-                              Icons.psychology_outlined,
-                              l10n.botGuideTitle,
-                            ),
-                            _menuItem(
-                              _MenuDestination.about,
-                              Icons.info_outline_rounded,
-                              l10n.aboutTitle,
-                            ),
-                          ],
+                        GamePress(
+                          child: PopupMenuButton<_MenuDestination>(
+                            tooltip: MaterialLocalizations.of(
+                              context,
+                            ).moreButtonTooltip,
+                            icon: const Icon(Icons.more_horiz_rounded),
+                            onSelected: _openSecondary,
+                            itemBuilder: (context) => [
+                              _menuItem(
+                                _MenuDestination.tutorial,
+                                Icons.school_outlined,
+                                l10n.tutorialTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.rules,
+                                Icons.menu_book_outlined,
+                                l10n.rulesTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.settings,
+                                Icons.settings_outlined,
+                                l10n.appSettingsTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.statistics,
+                                Icons.bar_chart_rounded,
+                                l10n.statisticsTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.replays,
+                                Icons.movie_filter_outlined,
+                                l10n.replayLibraryTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.bots,
+                                Icons.psychology_outlined,
+                                l10n.botGuideTitle,
+                              ),
+                              _menuItem(
+                                _MenuDestination.about,
+                                Icons.info_outline_rounded,
+                                l10n.aboutTitle,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    Divider(
-                      height: 18,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                    ),
+                    const SizedBox(height: 24),
                     Obx(() {
-                      final snapshot = appController.localSnapshot.value;
+                      final stored = appController.localSnapshot.value;
+                      final snapshot =
+                          stored != null &&
+                              !stored.state.isGameOver &&
+                              stored.state.revision > 0
+                          ? stored
+                          : null;
                       return Column(
                         children: [
                           if (snapshot != null) ...[
@@ -172,12 +197,7 @@ class MainMenuScreen extends StatelessWidget {
   }
 
   VoidCallback _withFeedback(VoidCallback action) {
-    return () {
-      if (Get.isRegistered<GameFeedback>()) {
-        playFeedback(Get.find<GameFeedback>().buttonPress());
-      }
-      action();
-    };
+    return action;
   }
 
   PopupMenuItem<_MenuDestination> _menuItem(

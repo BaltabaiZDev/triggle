@@ -14,7 +14,7 @@ void main() {
       port: 0,
       bindAddress: InternetAddress.loopbackIPv4,
       advertisedAddress: InternetAddress.loopbackIPv4.address,
-      boardSize: BoardSize.fromPreset(BoardSizePreset.small),
+      boardSize: BoardSize.fromPreset(BoardSizePreset.classic),
       ruleset: Ruleset.custom,
       botMoveProvider: const _FirstLegalBot(),
     );
@@ -53,7 +53,7 @@ void main() {
         roomCode: host.lobby.roomCode,
         sessionToken: 'not-a-valid-session-token',
       ),
-      throwsA(isA<StateError>()),
+      throwsA(isA<LanConnectionException>()),
     );
     expect(host.lobby.occupiedSeatCount, 2);
 

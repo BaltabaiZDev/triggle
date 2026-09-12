@@ -164,9 +164,12 @@ class LanLobbyState {
   final bool gamePaused;
 
   int get occupiedSeatCount => seats.where((seat) => seat.isOccupied).length;
+  int get capacity => boardSize.maximumPlayers;
 
   bool get canStart =>
+      !started &&
       occupiedSeatCount >= 2 &&
+      occupiedSeatCount <= capacity &&
       seats
           .where((seat) => seat.isOccupied && !seat.isBot)
           .every((seat) => seat.ready && seat.connected);

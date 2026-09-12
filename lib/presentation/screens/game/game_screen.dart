@@ -1,3 +1,4 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'dart:async';
 
 import 'package:flame/game.dart';
@@ -12,7 +13,7 @@ import 'package:trigrid/game/trigrid_flame_game.dart';
 import 'package:trigrid/l10n/generated/app_localizations.dart';
 import 'package:trigrid/presentation/controllers/lan_game_session_controller.dart';
 import 'package:trigrid/presentation/controllers/local_game_session_controller.dart';
-import 'package:trigrid/presentation/widgets/player_badge.dart';
+import 'package:trigrid/presentation/widgets/game_icon_controls.dart';
 import 'package:trigrid/services/game_feel/game_feedback.dart';
 import 'package:trigrid/services/game_feel/game_feel_settings.dart';
 
@@ -42,10 +43,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final String _controllerTag;
   late final LocalGameSessionController _session;
   late final TriGridFlameGame _game;
+  late final Widget _cachedBoard;
   AppController? _appController;
   Timer? _turnTimer;
   int? _turnSecondsRemaining;
   var _exiting = false;
+  var _readyToPop = false;
 
   @override
   void initState() {
@@ -76,9 +79,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _session.onStateChanged = _handleStateChanged;
     _session.onMatchCompleted = _handleMatchCompleted;
     _game = TriGridFlameGame(session: _session, onMoveRequested: _requestMove);
+    _cachedBoard = RepaintBoundary(child: GameWidget(game: _game));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleStateChanged(_session.currentState);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _game.systemReducedMotion = MediaQuery.disableAnimationsOf(context);
   }
 
   @override
@@ -115,89 +125,103 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           ? null
           : _networkStatusText(AppLocalizations.of(context), lanSession);
       final networkPaused = lanSession?.networkPaused.value ?? false;
-      return Scaffold(
-        body: SafeArea(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              IgnorePointer(
-                ignoring: blocksGameSurface,
-                child: ExcludeSemantics(
-                  excluding: blocksGameSurface,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final showHud =
-                          !isPaused &&
-                          !networkPaused &&
-                          networkErrorCode != 'host_ended';
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Positioned.fill(
-                            child: _buildBoardSurface(
-                              isPaused: isPaused,
-                              showResult: resultVisible,
-                              feelSettings: feelSettings,
-                              networkPaused: networkPaused,
-                              networkErrorCode: networkErrorCode,
-                            ),
-                          ),
-                          if (showHud)
-                            Positioned(
-                              left: 8,
-                              right: 8,
-                              top: 5,
-                              child: _GameToolbar(
-                                state: state,
-                                isBotThinking: isBotThinking,
-                                networkStatus: networkStatus,
-                                turnSecondsRemaining: _turnSecondsRemaining,
-                                onPause: _pause,
+      return PopScope(
+        canPop: _session is! LanGameSessionController || _readyToPop,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) unawaited(_exit());
+        },
+        child: GameMotionScope(
+          settings: feelSettings,
+          child: Scaffold(
+            body: SafeArea(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  IgnorePointer(
+                    ignoring: blocksGameSurface,
+                    child: ExcludeSemantics(
+                      excluding: blocksGameSurface,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final showHud =
+                              !state.isGameOver &&
+                              !isPaused &&
+                              !networkPaused &&
+                              networkErrorCode != 'host_ended';
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Positioned.fill(
+                                child: _buildBoardSurface(
+                                  isPaused: isPaused,
+                                  showResult: resultVisible,
+                                  feelSettings: feelSettings,
+                                  networkPaused: networkPaused,
+                                  networkErrorCode: networkErrorCode,
+                                ),
                               ),
-                            ),
-                          if (showHud)
-                            Positioned(
-                              left: 8,
-                              bottom: 8,
-                              child: _CameraMoveButton(
-                                onPan: _game.panByCanvasDelta,
-                              ),
-                            ),
-                          if (showHud)
-                            Positioned(
-                              right: 8,
-                              bottom: 8,
-                              child: _GameCornerButton(
-                                tooltip: AppLocalizations.of(
-                                  context,
-                                ).resetCamera,
-                                icon: Icons.refresh_rounded,
-                                onPressed: _game.resetCamera,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                              if (showHud)
+                                Positioned(
+                                  left: 8,
+                                  right: 8,
+                                  top: 5,
+                                  child: _GameToolbar(
+                                    state: state,
+                                    isBotThinking: isBotThinking,
+                                    networkStatus: networkStatus,
+                                    turnSecondsRemaining: _turnSecondsRemaining,
+                                    onPause: _pause,
+                                  ),
+                                ),
+                              if (showHud)
+                                Positioned(
+                                  left: 8,
+                                  bottom: 8,
+                                  child: _CameraMoveButton(
+                                    onPan: _game.panByCanvasDelta,
+                                  ),
+                                ),
+                              if (showHud)
+                                Positioned(
+                                  right: 8,
+                                  bottom: 8,
+                                  child: _GameCornerButton(
+                                    tooltip: AppLocalizations.of(
+                                      context,
+                                    ).resetCamera,
+                                    icon: Icons.refresh_rounded,
+                                    onPressed: _game.resetCamera,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned.fill(
+                    child: GameSwitcher(
+                      child: awaitingHandoff
+                          ? _HandoffOverlay(
+                              playerName: _session
+                                  .currentState
+                                  .currentPlayer
+                                  .displayName,
+                              onReady: _session.confirmHandoff,
+                            )
+                          : resultVisible
+                          ? _ResultOverlay(
+                              state: state,
+                              onReplay: _replay,
+                              onRestart: lanSession == null ? _restart : null,
+                              onExit: _exit,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
               ),
-              if (awaitingHandoff)
-                Positioned.fill(
-                  child: _HandoffOverlay(
-                    playerName: _session.currentState.currentPlayer.displayName,
-                    onReady: _session.confirmHandoff,
-                  ),
-                )
-              else if (resultVisible)
-                Positioned.fill(
-                  child: _ResultOverlay(
-                    state: state,
-                    onReplay: _replay,
-                    onRestart: _restart,
-                    onExit: _exit,
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       );
@@ -238,7 +262,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               onScaleStart: _game.beginScale,
               onScaleUpdate: _game.updateScale,
               onScaleEnd: _game.endScale,
-              child: GameWidget(game: _game),
+              child: _cachedBoard,
             ),
           ),
         ),
@@ -270,32 +294,41 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-        if (isPaused && !networkPaused)
-          Positioned.fill(
-            child: _PauseOverlay(
-              settings: feelSettings,
-              onSettingsChanged: _updateFeelSettings,
-              onResume: _resume,
-              onRestart: _restart,
-              onExit: _exit,
-            ),
+        Positioned.fill(
+          child: GameSwitcher(
+            child:
+                networkErrorCode == 'host_ended' &&
+                    _session is LanGameSessionController
+                ? _HostEndedOverlay(
+                    state: _session.currentState,
+                    onSave:
+                        _appController == null ||
+                            _session.currentState.isGameOver
+                        ? null
+                        : _saveLanSnapshot,
+                    onExit: _exit,
+                  )
+                : networkPaused && _session is LanGameSessionController
+                ? _NetworkPauseOverlay(session: _session, onExit: _exit)
+                : isPaused && !networkPaused
+                ? _PauseOverlay(
+                    settings: feelSettings,
+                    onSettingsChanged: _updateFeelSettings,
+                    onResume: _session.currentState.isGameOver ? null : _resume,
+                    onRestart: _session is LanGameSessionController
+                        ? null
+                        : _restart,
+                    onExit: _exit,
+                  )
+                : const SizedBox.shrink(),
           ),
-        if (networkPaused && _session is LanGameSessionController)
-          Positioned.fill(child: _NetworkPauseOverlay(session: _session)),
-        if (networkErrorCode == 'host_ended' &&
-            _session is LanGameSessionController)
-          Positioned.fill(
-            child: _HostEndedOverlay(
-              state: _session.currentState,
-              onSave: _appController == null ? null : _saveLanSnapshot,
-              onExit: _exit,
-            ),
-          ),
+        ),
       ],
     );
   }
 
   void _pause() {
+    if (_session.currentState.isGameOver) return;
     _session.buttonPress();
     _turnTimer?.cancel();
     _turnSecondsRemaining = null;
@@ -304,6 +337,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   void _resume() {
+    if (_session.currentState.isGameOver) return;
     _session.buttonPress();
     _session.setPaused(false);
     _game.setPaused(false);
@@ -337,13 +371,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         title: Text(l10n.confirmMoveTitle),
         content: Text(l10n.confirmMoveDescription),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          GamePress(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.placeBand),
+          GamePress(
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.placeBand),
+            ),
           ),
         ],
       ),
@@ -373,6 +411,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final appController = _appController;
     if (!widget.persistMatch ||
         widget.tutorialMode ||
+        _session.isReplaying.value ||
         appController == null ||
         _session is LanGameSessionController ||
         state.isGameOver) {
@@ -448,6 +487,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final session = _session;
     if (session is LanGameSessionController) {
       await session.shutdown();
+      if (!mounted) return;
+      setState(() => _readyToPop = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          Navigator.of(context).pop();
+        }
+      });
+      return;
     }
     if (!mounted) {
       return;
@@ -541,14 +588,18 @@ class _GameToolbar extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            player.displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              shadows: shadow,
+                          GameSwitcher(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              player.displayName,
+                              key: ValueKey(player.id),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                shadows: shadow,
+                              ),
                             ),
                           ),
                           Text(
@@ -598,16 +649,18 @@ class _GameToolbar extends StatelessWidget {
             ),
             const SizedBox(width: 5),
           ],
-          IconButton(
-            tooltip: l10n.pauseGame,
-            onPressed: onPause,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 36, height: 44),
-            icon: const Icon(
-              Icons.more_vert_rounded,
-              size: 29,
-              color: Colors.white,
-              shadows: shadow,
+          GamePress(
+            child: IconButton(
+              tooltip: l10n.pauseGame,
+              onPressed: onPause,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 44),
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                size: 29,
+                color: Colors.white,
+                shadows: shadow,
+              ),
             ),
           ),
         ],
@@ -632,29 +685,34 @@ class _MiniScore extends StatelessWidget {
       label: semanticsLabel,
       child: Tooltip(
         message: semanticsLabel,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          width: 29,
-          height: 29,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: visuals.color,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: active ? Colors.white : Colors.black,
-              width: active ? 3 : 2,
+        child: GamePulse(
+          value: '${player.score}:$active',
+          color: visuals.color,
+          child: AnimatedContainer(
+            duration: GameMotionScope.duration(context, 240),
+            curve: const GameSpringCurve(),
+            width: 29,
+            height: 29,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: visuals.color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: active ? Colors.white : Colors.black,
+                width: active ? 3 : 2,
+              ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black87, offset: Offset(1, 2)),
+              ],
             ),
-            boxShadow: const [
-              BoxShadow(color: Colors.black87, offset: Offset(1, 2)),
-            ],
-          ),
-          child: Text(
-            '${player.score}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              shadows: [Shadow(color: Colors.black, blurRadius: 2)],
+            child: Text(
+              '${player.score}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                shadows: [Shadow(color: Colors.black, blurRadius: 2)],
+              ),
             ),
           ),
         ),
@@ -676,10 +734,13 @@ class _CameraMoveButton extends StatelessWidget {
       child: Semantics(
         button: true,
         label: l10n.moveBoard,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onPanUpdate: (details) => onPan(details.delta),
-          child: const _CornerControlSurface(icon: Icons.open_with_rounded),
+        child: GamePress(
+          sound: false,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (details) => onPan(details.delta),
+            child: const _CornerControlSurface(icon: Icons.open_with_rounded),
+          ),
         ),
       ),
     );
@@ -703,10 +764,12 @@ class _GameCornerButton extends StatelessWidget {
       message: tooltip,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(4),
-          child: _CornerControlSurface(icon: icon),
+        child: GamePress(
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(4),
+            child: _CornerControlSurface(icon: icon),
+          ),
         ),
       ),
     );
@@ -816,10 +879,12 @@ class _HandoffOverlay extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 14),
-                FilledButton.icon(
-                  onPressed: onReady,
-                  icon: const Icon(Icons.visibility_rounded),
-                  label: Text(l10n.readyForTurn),
+                GamePress(
+                  child: FilledButton.icon(
+                    onPressed: onReady,
+                    icon: const Icon(Icons.visibility_rounded),
+                    label: Text(l10n.readyForTurn),
+                  ),
                 ),
               ],
             ),
@@ -831,42 +896,38 @@ class _HandoffOverlay extends StatelessWidget {
 }
 
 class _NetworkPauseOverlay extends StatelessWidget {
-  const _NetworkPauseOverlay({required this.session});
-
+  const _NetworkPauseOverlay({required this.session, required this.onExit});
   final LanGameSessionController session;
-
+  final VoidCallback onExit;
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final disconnected = session.lobby.value?.seats
-        .where((seat) => seat.isOccupied && !seat.isBot && !seat.connected)
-        .toList();
-    final missing = disconnected ?? const <LanSeat>[];
+    final missing =
+        session.lobby.value?.seats
+            .where((seat) => seat.isOccupied && !seat.isBot && !seat.connected)
+            .toList() ??
+        const <LanSeat>[];
     return ColoredBox(
-      color: const Color(0xE61B2924),
+      color: const Color(0xCE0E1F19),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Card(
-            margin: const EdgeInsets.all(14),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.wifi_off_rounded,
-                    size: 34,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 12),
+                  const Icon(Icons.wifi_off_rounded, size: 34),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.networkGamePaused,
                     style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     missing.isEmpty
                         ? l10n.networkPlayerReconnected
@@ -878,37 +939,60 @@ class _NetworkPauseOverlay extends StatelessWidget {
                           ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 12),
-                  if (!session.isHost)
-                    Text(
-                      l10n.networkHostWillDecide,
-                      textAlign: TextAlign.center,
-                    )
-                  else if (missing.isEmpty)
-                    FilledButton(
-                      onPressed: () => session.resolveDisconnect('resume', ''),
-                      child: Text(l10n.resumeGame),
-                    )
-                  else
-                    for (final seat in missing) ...[
-                      Text(
-                        seat.displayName ?? l10n.humanPlayer,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      FilledButton.tonal(
-                        onPressed: () => session.resolveDisconnect(
-                          'replace',
-                          seat.playerId!,
+                  if (session.isHost && missing.isNotEmpty)
+                    for (final seat in missing)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(seat.displayName ?? l10n.humanPlayer),
+                            ),
+                            GameIconAction(
+                              label: l10n.replaceWithBot,
+                              icon: Icons.smart_toy_rounded,
+                              onPressed: () => session.resolveDisconnect(
+                                'replace',
+                                seat.playerId!,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            GameIconAction(
+                              label: l10n.removePlayer,
+                              icon: Icons.person_remove_rounded,
+                              onPressed: () => session.resolveDisconnect(
+                                'remove',
+                                seat.playerId!,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(l10n.replaceWithBot),
                       ),
-                      TextButton(
-                        onPressed: () =>
-                            session.resolveDisconnect('remove', seat.playerId!),
-                        child: Text(l10n.removePlayer),
+                  const SizedBox(height: 22),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (session.isHost &&
+                          missing.isEmpty &&
+                          !session.currentState.isGameOver &&
+                          session.client.isConnected) ...[
+                        GameIconAction(
+                          label: l10n.resumeGame,
+                          icon: Icons.play_arrow_rounded,
+                          primary: true,
+                          size: 64,
+                          onPressed: () =>
+                              session.resolveDisconnect('resume', ''),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      GameIconAction(
+                        label: l10n.exitToMenu,
+                        icon: Icons.home_rounded,
+                        onPressed: onExit,
                       ),
                     ],
+                  ),
                 ],
               ),
             ),
@@ -959,10 +1043,12 @@ class _NetworkErrorBanner extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-            IconButton(
-              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-              onPressed: onDismiss,
-              icon: const Icon(Icons.close_rounded, size: 19),
+            GamePress(
+              child: IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: onDismiss,
+                icon: const Icon(Icons.close_rounded, size: 19),
+              ),
             ),
           ],
         ),
@@ -977,56 +1063,54 @@ class _HostEndedOverlay extends StatelessWidget {
     required this.onSave,
     required this.onExit,
   });
-
   final GameState state;
   final Future<void> Function()? onSave;
   final VoidCallback onExit;
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ColoredBox(
-      color: const Color(0xE61B2924),
+      color: const Color(0xCE0E1F19),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Card(
-            margin: const EdgeInsets.all(14),
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.power_settings_new_rounded,
-                    size: 34,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 12),
+                  const Icon(Icons.wifi_off_rounded, size: 36),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.networkHostEndedTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.networkHostEndedDescription(state.revision),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  if (onSave != null) ...[
-                    OutlinedButton.icon(
-                      onPressed: onSave,
-                      icon: const Icon(Icons.save_outlined),
-                      label: Text(l10n.saveLastPosition),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  FilledButton.icon(
-                    onPressed: onExit,
-                    icon: const Icon(Icons.home_rounded),
-                    label: Text(l10n.exitToMenu),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (onSave != null &&
+                          state.revision > 0 &&
+                          !state.isGameOver) ...[
+                        GameIconAction(
+                          label: l10n.saveLastPosition,
+                          icon: Icons.save_outlined,
+                          onPressed: onSave,
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      GameIconAction(
+                        label: l10n.exitToMenu,
+                        icon: Icons.home_rounded,
+                        primary: true,
+                        size: 64,
+                        onPressed: onExit,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1046,112 +1130,117 @@ class _PauseOverlay extends StatelessWidget {
     required this.onRestart,
     required this.onExit,
   });
-
   final GameFeelSettings settings;
   final ValueChanged<GameFeelSettings> onSettingsChanged;
-  final VoidCallback onResume;
-  final VoidCallback onRestart;
+  final VoidCallback? onResume;
+  final VoidCallback? onRestart;
   final VoidCallback onExit;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ColoredBox(
-      color: const Color(0x990E1F19),
+      color: const Color(0xB30E1F19),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 390, maxHeight: 470),
-          child: Card(
-            margin: const EdgeInsets.all(14),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 118),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          constraints: const BoxConstraints(maxWidth: 350),
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.gamePaused,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  _SettingsSlider(
+                    icon: Icons.music_note_rounded,
+                    label: l10n.musicVolume,
+                    value: settings.musicVolume,
+                    onChanged: (value) => onSettingsChanged(
+                      settings.copyWith(musicVolume: value),
+                    ),
+                  ),
+                  _SettingsSlider(
+                    icon: Icons.volume_up_rounded,
+                    label: l10n.soundEffectsVolume,
+                    value: settings.soundEffectsVolume,
+                    onChanged: (value) => onSettingsChanged(
+                      settings.copyWith(soundEffectsVolume: value),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        l10n.gamePaused,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      _SettingsSlider(
-                        label: l10n.soundEffectsVolume,
-                        value: settings.soundEffectsVolume,
-                        onChanged: (value) => onSettingsChanged(
-                          settings.copyWith(soundEffectsVolume: value),
+                      GameIconAction(
+                        label: l10n.muteAll,
+                        icon: settings.muted
+                            ? Icons.volume_off_rounded
+                            : Icons.volume_up_rounded,
+                        selected: settings.muted,
+                        onPressed: () => onSettingsChanged(
+                          settings.copyWith(muted: !settings.muted),
                         ),
                       ),
-                      SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(l10n.muteAll),
-                        value: settings.muted,
-                        onChanged: (value) =>
-                            onSettingsChanged(settings.copyWith(muted: value)),
-                      ),
-                      SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(l10n.haptics),
-                        value: settings.haptics,
-                        onChanged: (value) => onSettingsChanged(
-                          settings.copyWith(haptics: value),
+                      const SizedBox(width: 12),
+                      GameIconAction(
+                        label: l10n.haptics,
+                        icon: Icons.vibration_rounded,
+                        selected: settings.haptics,
+                        onPressed: () => onSettingsChanged(
+                          settings.copyWith(haptics: !settings.haptics),
                         ),
                       ),
-                      SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(l10n.reducedMotion),
-                        value: settings.reducedMotion,
-                        onChanged: (value) => onSettingsChanged(
-                          settings.copyWith(reducedMotion: value),
+                      const SizedBox(width: 12),
+                      GameIconAction(
+                        label: l10n.reducedMotion,
+                        icon: Icons.animation_rounded,
+                        selected: settings.reducedMotion,
+                        onPressed: () => onSettingsChanged(
+                          settings.copyWith(
+                            reducedMotion: !settings.reducedMotion,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: ColoredBox(
-                    color: Theme.of(context).colorScheme.surface,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 7, 16, 10),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          FilledButton(
-                            onPressed: onResume,
-                            child: Text(l10n.resumeGame),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: onRestart,
-                                  child: Text(l10n.restartMatch),
-                                ),
-                              ),
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: onExit,
-                                  child: Text(l10n.backToSetup),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                  const SizedBox(height: 26),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (onRestart != null) ...[
+                        GameIconAction(
+                          label: l10n.restartMatch,
+                          icon: Icons.restart_alt_rounded,
+                          onPressed: onRestart,
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      if (onResume != null) ...[
+                        GameIconAction(
+                          label: l10n.resumeGame,
+                          icon: Icons.play_arrow_rounded,
+                          primary: true,
+                          size: 68,
+                          onPressed: onResume,
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      GameIconAction(
+                        label: l10n.backToSetup,
+                        icon: Icons.home_rounded,
+                        onPressed: onExit,
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1162,39 +1251,34 @@ class _PauseOverlay extends StatelessWidget {
 
 class _SettingsSlider extends StatelessWidget {
   const _SettingsSlider({
+    required this.icon,
     required this.label,
     required this.value,
     required this.onChanged,
   });
-
+  final IconData icon;
   final String label;
   final double value;
   final ValueChanged<double> onChanged;
-
   @override
-  Widget build(BuildContext context) {
-    final labelText = '${(value * 100).round().clamp(0, 100)}%';
-    return Semantics(
-      label: label,
-      value: labelText,
-      child: Row(
-        children: [
-          SizedBox(width: 105, child: Text(label)),
-          Expanded(
-            child: Slider(
-              value: value,
-              min: 0,
-              max: 1,
-              divisions: 10,
-              label: labelText,
-              onChanged: onChanged,
-            ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Tooltip(message: label, child: Icon(icon, size: 22)),
+      Expanded(
+        child: GamePress(
+          sound: false,
+          child: Slider(
+            value: value,
+            divisions: 10,
+            label: label,
+            semanticFormatterCallback: (value) =>
+                '$label ${(value * 100).round()}%',
+            onChanged: onChanged,
           ),
-          SizedBox(width: 42, child: Text(labelText, textAlign: TextAlign.end)),
-        ],
+        ),
       ),
-    );
-  }
+    ],
+  );
 }
 
 class _ResultOverlay extends StatelessWidget {
@@ -1207,86 +1291,113 @@ class _ResultOverlay extends StatelessWidget {
 
   final GameState state;
   final VoidCallback onReplay;
-  final VoidCallback onRestart;
+  final VoidCallback? onRestart;
   final VoidCallback onExit;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final result = state.matchResult!;
-    final winnerNames = state.players
-        .where((player) => result.winnerPlayerIds.contains(player.id))
-        .map((player) => player.displayName)
+    final names = state.players
+        .where((p) => result.winnerPlayerIds.contains(p.id))
+        .map((p) => p.displayName)
         .toList();
-    final winnerText = result.isTie
-        ? l10n.tiedWinners(winnerNames.join(', '))
-        : l10n.winnerName(winnerNames.single);
-    final reasonText = switch (result.reason) {
-      MatchEndReason.markerLimit => l10n.resultMarkerLimit,
-      MatchEndReason.bandsExhausted => l10n.resultBandsExhausted,
-      MatchEndReason.noLegalMoves => l10n.resultNoLegalMoves,
-    };
-
     return ColoredBox(
       key: const Key('match-result-surface'),
-      color: const Color(0xA60E1F19),
+      color: const Color(0xB30E1F19),
       child: Center(
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.86, end: 1),
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutBack,
-          builder: (context, scale, child) => Transform.scale(
-            scale: scale,
-            child: Opacity(opacity: scale.clamp(0, 1), child: child),
-          ),
+        child: GameCelebration(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: Card(
-              margin: const EdgeInsets.all(14),
+            constraints: const BoxConstraints(maxWidth: 370),
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    const GameReveal(
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        size: 48,
+                        color: Color(0xFFF1D57B),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
                       l10n.matchResultTitle,
                       style: Theme.of(context).textTheme.headlineSmall,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
-                      winnerText,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      result.isTie
+                          ? l10n.tiedWinners(names.join(', '))
+                          : l10n.winnerName(names.single),
                       textAlign: TextAlign.center,
                     ),
-                    Text(reasonText, textAlign: TextAlign.center),
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.finalScores,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    for (final player in state.players) ...[
-                      PlayerBadge(
-                        player: player,
-                        isActive: result.winnerPlayerIds.contains(player.id),
+                    const SizedBox(height: 20),
+                    for (final player in state.players)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 12,
+                              color: PlayerVisuals.forSeat(
+                                player.visualIndex,
+                              ).color,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                player.displayName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Text(
+                              '${player.score}',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color:
+                                        result.winnerPlayerIds.contains(
+                                          player.id,
+                                        )
+                                        ? const Color(0xFFF1D57B)
+                                        : null,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                    ],
-                    const SizedBox(height: 10),
-                    FilledButton(
-                      onPressed: onReplay,
-                      child: Text(l10n.replayMatch),
-                    ),
-                    OutlinedButton(
-                      onPressed: onRestart,
-                      child: Text(l10n.restartMatch),
-                    ),
-                    TextButton(
-                      onPressed: onExit,
-                      child: Text(l10n.backToSetup),
+                    const SizedBox(height: 22),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GameIconAction(
+                          label: l10n.replayMatch,
+                          icon: Icons.movie_rounded,
+                          onPressed: onReplay,
+                        ),
+                        const SizedBox(width: 16),
+                        if (onRestart != null) ...[
+                          GameIconAction(
+                            label: l10n.restartMatch,
+                            icon: Icons.restart_alt_rounded,
+                            primary: true,
+                            size: 64,
+                            onPressed: onRestart,
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                        GameIconAction(
+                          label: l10n.backToSetup,
+                          icon: Icons.home_rounded,
+                          onPressed: onExit,
+                        ),
+                      ],
                     ),
                   ],
                 ),

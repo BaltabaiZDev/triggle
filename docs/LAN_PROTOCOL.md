@@ -1,6 +1,6 @@
 # TriGrid LAN Protocol
 
-This document defines TriGrid LAN protocol version 1. The implementation uses
+This document defines TriGrid LAN protocol version 2. The implementation uses
 an authoritative Flutter host device, WebSocket gameplay transport, native
 DNS-SD/Bonjour discovery, and a UDP broadcast fallback. It requires no internet
 service or remote backend.
@@ -17,8 +17,8 @@ including a host-owned bot move, passes through the same core `MoveValidator`.
 - Discovery: native DNS-SD/Bonjour service `_trigrid._tcp`
 - Discovery fallback: IPv4 UDP broadcast on port `42421`
 - Fixed gameplay port: TCP `42422` (not user-configurable)
-- Protocol version: `1`
-- Supported room size: two to four occupied seats
+- Protocol version: `2`
+- Supported room size: two seats on radius 2; two to four on larger boards
 
 Binary WebSocket frames are rejected. The host remains usable when it receives
 malformed JSON, an invalid payload, or an unsupported client message.
@@ -29,7 +29,7 @@ Every WebSocket message has this shape:
 
 ```json
 {
-  "protocolVersion": 1,
+  "protocolVersion": 2,
   "type": "submitMove",
   "messageId": "client:2fa7...:4",
   "sequence": 4,
@@ -41,7 +41,7 @@ Every WebSocket message has this shape:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `protocolVersion` | integer | Must equal `1`; other versions are refused. |
+| `protocolVersion` | integer | Must equal `2`; other versions are refused. |
 | `type` | string | A `LanMessageType` name listed below. |
 | `messageId` | non-empty string | Diagnostic identity for the packet. |
 | `sequence` | non-negative integer | Monotonically increases for its sender/socket. |
@@ -177,7 +177,7 @@ accepted action is broadcast as `actionAccepted`:
 The client first hashes the received state. When its local reduction of the
 confirmed action produces the same hash, it uses the normal game-feel and
 replay presentation path. Otherwise it adopts the verified authoritative state
-and reports a resynchronization.
+without showing an error for a successful resynchronization.
 
 An invalid move produces `actionRejected`:
 
@@ -259,7 +259,7 @@ every 1.4 seconds and also answers an explicit probe:
     "port": 42422,
     "playerCount": 2,
     "capacity": 4,
-    "protocolVersion": 1
+    "protocolVersion": 2
   }
 }
 ```
@@ -276,23 +276,23 @@ virtual adapters.
 If routers block discovery or local network permission is denied, manual IP and
 QR joining remain available once the OS grants the connection itself.
 
-Version-1 QR payload:
+Version-2 QR payload:
 
 ```text
-trigrid://join?id=7942...&host=192.168.4.1&port=42422&code=ABC234&v=1
+trigrid://join?id=7942...&host=192.168.4.1&port=42422&code=ABC234&v=2
 ```
 
 The scanner accepts only the `trigrid://join` scheme, valid host/port/code
 fields, and the current protocol version. When the same room ID is already in
 nearby discovery, the scanner uses that resolved reachable address instead of
 a stale or wrong interface address embedded by an older host. The encoded port
-is fixed at `42422` for version-1 rooms and is never requested from the player.
+is fixed at `42422` for version-2 rooms and is never requested from the player.
 No player token is encoded.
 
 ## 8. Errors
 
 General `error` payloads use `{"code": "<machine_code>"}` and may add details.
-Version 1 currently emits:
+Version 2 currently emits:
 
 - `binary_not_supported`
 - `incompatible_protocol`
@@ -301,6 +301,8 @@ Version 1 currently emits:
 - `out_of_order_message`
 - `join_required`
 - `invalid_room_or_name`
+- `invalid_room_code`
+- `board_capacity`
 - `invalid_session_token`
 - `match_already_started`
 - `room_full`
@@ -314,7 +316,28 @@ Version 1 currently emits:
 UI text is localized from these machine-readable conditions; protocol strings
 are never shown directly as player-facing copy.
 
-## 9. Platform configuration and validation
+## 9. Version-2 recovery and terminal-state behavior
+
+- V2 is required because new matches use rules v2 with larger supplies. V1
+  peers are rejected explicitly; update the host and every client together.
+  The discovery container names ending in `_v1` are unchanged; their embedded
+  protocolVersion / TXT proto / QR v fields are now 2.
+- Joining errors distinguish an expired/wrong code, full room, already-started
+  room, incompatible version, closed host, and ordinary transport failure.
+- The manual field accepts a plain IP, IP:port, or copied HTTP/WebSocket URL,
+  normalizing it to one port and the /ws endpoint. No separate port prompt.
+- Leaving awaits advertiser, owned server, and client shutdown before returning
+  to setup. Repeat taps cannot pop multiple routes. Active games stop advertising
+  themselves as joinable. A closed lobby shows an exit instead of stale seats.
+- Timeouts close a socket even if WebSocket.connect completes after the timeout.
+  Terminal token/room rejection stops reconnect attempts immediately.
+- Lower-revision snapshots are ignored. Terminal snapshots keep the final-move
+  presentation delay; repeated snapshots cannot reset or bypass that timer.
+  Disconnects after the match ends cannot pause, resume, or restart the game.
+- Continue is reserved for a verified, non-terminal local match with a move.
+  A closed LAN room is never offered as a resumable local match.
+
+## 10. Platform configuration and validation
 
 Android declares Internet, network/Wi-Fi state, multicast, nearby Wi-Fi, and
 camera permissions. The LAN entry flow requests nearby-Wi-Fi access when

@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classicBoardDetails =>
-      '37 pegs · 54 triangles · bands: 10 for 2 players, 12 for 3–4';
+      '37 pegs · 54 triangles · bands: 14 for 2 players, 16 for 3–4';
 
   @override
   String get scaledBoardDetails =>
@@ -634,7 +634,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesBoardsBody =>
-      'Classic is radius 3 with 37 pegs and 54 triangles. Two players receive 10 bands each; three or four receive 12. Other board sizes use clearly marked custom supply scaling.';
+      'Classic has 37 pegs and 54 triangles. Two players receive 14 bands each; three or four receive 16. Small supports two players with 6 bands each. Other sizes use scaled supplies. Restarting a round rotates the first player.';
 
   @override
   String get botGuideTitle => 'Bot strengths';
@@ -941,4 +941,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String debugStateHash(String value) {
     return 'Hash $value';
   }
+
+  @override
+  String get lanWrongCode => 'Room code is incorrect.';
+
+  @override
+  String get lanRoomFull => 'This room is full.';
+
+  @override
+  String get lanRoomStarted => 'The match has already started.';
+
+  @override
+  String get lanRoomClosed => 'This room is closed. Choose a new room.';
+
+  @override
+  String get lanVersionMismatch => 'Update the game on every device.';
+
+  @override
+  String get smallBoardLimit => 'Small board · 2 players';
 }

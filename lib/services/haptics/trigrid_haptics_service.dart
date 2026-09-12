@@ -6,6 +6,8 @@ enum GameHaptic { touch, snap, invalid, capture, victory }
 class TriGridHapticsService {
   var _settings = GameFeelSettings();
   bool? _available;
+  final _clock = Stopwatch()..start();
+  final _lastPulse = <GameHaptic, int>{};
 
   void updateSettings(GameFeelSettings settings) {
     _settings = settings;
@@ -24,10 +26,15 @@ class TriGridHapticsService {
     if (!_settings.haptics) {
       return;
     }
+    final now = _clock.elapsedMilliseconds;
+    if (now - (_lastPulse[haptic] ?? -1000) < 100) return;
+    _lastPulse[haptic] = now;
     _available ??= await Vibration.hasVibrator();
     if (!(_available ?? false)) {
       return;
     }
+    // Capability lookup must not turn an old input into a late vibration.
+    if (_clock.elapsedMilliseconds - now > 100 || !_settings.haptics) return;
     switch (haptic) {
       case GameHaptic.touch:
         await Vibration.vibrate(duration: 16, amplitude: 42);

@@ -5,6 +5,7 @@ import 'package:trigrid/core/ai/trigrid_ai.dart';
 import 'package:trigrid/core/game/trigrid_engine.dart';
 import 'package:trigrid/services/game_feel/game_feedback.dart';
 import 'package:trigrid/services/game_feel/game_feel_settings.dart';
+import 'package:uuid/uuid.dart';
 
 enum BoardPromptType {
   chooseStart,
@@ -44,21 +45,23 @@ class BoardPrompt {
 
 class LocalGameSessionController extends GetxController {
   LocalGameSessionController(
-    this.settings, {
+    GameSettings settings, {
     GameFeedback feedback = const NoopGameFeedback(),
     GameFeelSettings? initialFeelSettings,
     BotMoveProvider botMoveProvider = const BotWorker(),
     this.enablePassAndPlayHandoffs = false,
     this.feedbackPerspectivePlayerId,
     this.disposeFeedbackOnClose = true,
-  }) : engine = GameEngine(settings),
+  }) : _settings = settings,
+       engine = GameEngine(settings),
        _feedback = feedback,
        _botMoveProvider = botMoveProvider {
     state = engine.createInitialState(settings).obs;
     feelSettings = (initialFeelSettings ?? GameFeelSettings()).obs;
   }
 
-  final GameSettings settings;
+  GameSettings _settings;
+  GameSettings get settings => _settings;
   final GameEngine engine;
   final GameFeedback _feedback;
   final BotMoveProvider _botMoveProvider;
@@ -76,6 +79,7 @@ class LocalGameSessionController extends GetxController {
   final Rx<BoardPrompt> prompt = const BoardPrompt.chooseStart().obs;
   final List<SubmitMoveAction> _acceptedActions = [];
   void Function(GameTransition transition)? onAcceptedTransition;
+  void Function()? onInvalidFeedback;
   void Function(GameState state)? onStateChanged;
   void Function(
     GameState state,
@@ -141,10 +145,7 @@ class LocalGameSessionController extends GetxController {
     if (transition.wasAccepted) {
       applyConfirmedTransition(transition);
     } else {
-      prompt.value = BoardPrompt.validationError(
-        transition.validation.errorCode!,
-      );
-      playFeedback(_feedback.invalidMove());
+      showValidationError(transition.validation.errorCode!);
     }
     if (transition.wasAccepted) {
       startAutomatedTurnIfNeeded();
@@ -197,6 +198,13 @@ class LocalGameSessionController extends GetxController {
 
   void showInvalidPlacement() {
     prompt.value = const BoardPrompt.invalidPlacement();
+    onInvalidFeedback?.call();
+    playFeedback(_feedback.invalidMove());
+  }
+
+  void showValidationError(MoveValidationErrorCode code) {
+    prompt.value = BoardPrompt.validationError(code);
+    onInvalidFeedback?.call();
     playFeedback(_feedback.invalidMove());
   }
 
@@ -227,7 +235,7 @@ class LocalGameSessionController extends GetxController {
     }
   }
 
-  void restart() {
+  void restart({bool newRound = true}) {
     _presentationGeneration++;
     _automationGeneration++;
     _resultTimer?.cancel();
@@ -241,6 +249,7 @@ class LocalGameSessionController extends GetxController {
     awaitingHandoff.value = false;
     lastBotDecision.value = null;
     showResult.value = false;
+    if (newRound) _settings = settings.nextRound(matchId: const Uuid().v4());
     state.value = engine.createInitialState(settings);
     prompt.value = const BoardPrompt.chooseStart();
     onStateChanged?.call(state.value);
@@ -385,8 +394,8 @@ class LocalGameSessionController extends GetxController {
       }
     }
 
-    if (generation != _automationGeneration ||
-        isPaused.value ||
+    if (generation != _automationGeneration) return;
+    if (isPaused.value ||
         isReplaying.value ||
         currentState.revision != startingState.revision ||
         currentState.currentPlayer.id != startingState.currentPlayer.id) {
@@ -430,7 +439,6 @@ class LocalGameSessionController extends GetxController {
     }
     final result = transition.state.matchResult;
     if (result != null) {
-      playFeedback(_matchEndFeedback(result));
       if (scheduleResult) {
         _scheduleResult(_presentationGeneration);
       }
@@ -502,25 +510,32 @@ class LocalGameSessionController extends GetxController {
     startAutomatedTurnIfNeeded();
   }
 
+  /// Snapshots can follow the final accepted action in the same network burst.
+  /// They must neither skip nor continually restart the final-move presentation.
+  void presentResultWhenReady() {
+    if (currentState.isGameOver) _scheduleResult(_presentationGeneration);
+  }
+
   void _scheduleResult(int generation) {
-    _resultTimer?.cancel();
+    if (showResult.value || (_resultTimer?.isActive ?? false)) return;
     if (onAcceptedTransition == null) {
       showResult.value = true;
+      playFeedback(_matchEndFeedback(currentState.matchResult!));
       return;
     }
     final delay = feelSettings.value.reducedMotion
-        ? Duration.zero
+        ? const Duration(milliseconds: 700)
         : Duration(
-            milliseconds: (1050 * feelSettings.value.motionScale).round(),
+            milliseconds: (1900 * feelSettings.value.motionScale).round().clamp(
+              1600,
+              3000,
+            ),
           );
-    if (delay == Duration.zero) {
-      showResult.value = true;
-      return;
-    }
     _resultTimer = Timer(delay, () {
       if (generation == _presentationGeneration &&
           currentState.matchResult != null) {
         showResult.value = true;
+        playFeedback(_matchEndFeedback(currentState.matchResult!));
       }
     });
   }

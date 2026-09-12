@@ -32,7 +32,7 @@ void main() {
             customRadius: radius,
           ),
           ruleset: Ruleset.custom,
-          playerCount: radius.isEven ? 4 : 2,
+          playerCount: radius > 2 && radius.isEven ? 4 : 2,
         );
       });
     }

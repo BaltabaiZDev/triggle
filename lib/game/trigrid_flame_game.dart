@@ -19,6 +19,7 @@ class TriGridFlameGame extends FlameGame {
     BoardProjection? projection,
   }) : projection = projection ?? const BoardProjection() {
     session.onAcceptedTransition = animateTransition;
+    session.onInvalidFeedback = animateInvalid;
   }
 
   final LocalGameSessionController session;
@@ -48,9 +49,17 @@ class TriGridFlameGame extends FlameGame {
   GridCoordinate? _returnStart;
   Vector2? _returnFrom;
   var _returnElapsed = 1.0;
+  var _invalidElapsed = 1.0;
+  var _selectionElapsed = 1.0;
   var _celebrationElapsed = 0.0;
   Vector2? _celebrationStartPosition;
   var _celebrationStartZoom = 1.0;
+
+  bool systemReducedMotion = false;
+  bool get reducedMotion =>
+      systemReducedMotion || session.feelSettings.value.reducedMotion;
+  double get motionScale =>
+      reducedMotion ? 0 : session.feelSettings.value.motionScale;
 
   GameState get state => session.currentState;
 
@@ -85,6 +94,9 @@ class TriGridFlameGame extends FlameGame {
     }
     _moveAnimation?.elapsed += dt;
     _returnElapsed += dt;
+    _invalidElapsed += dt;
+    _selectionElapsed += dt;
+    if (isCelebrating && _celebrationElapsed <= 3.2) _celebrationElapsed += dt;
     _updateCameraInertia(dt);
     _updateCelebrationCamera(dt);
     if (_needsContinuousFrames || _diagnosticsKeepAlive) {
@@ -121,7 +133,7 @@ class TriGridFlameGame extends FlameGame {
     }
     _wake();
     final worldPoint = canvasToWorld(canvasPosition);
-    final peg = projection.nearestPeg(worldPoint, board);
+    final peg = _inputPeg(worldPoint, preferValidEnd: true);
     if (peg == null) {
       clearSelection();
       session.showInvalidPlacement();
@@ -160,7 +172,7 @@ class TriGridFlameGame extends FlameGame {
     }
 
     final worldPoint = canvasToWorld(details.localFocalPoint);
-    final peg = projection.nearestPeg(worldPoint, board);
+    final peg = _inputPeg(worldPoint);
     if (peg != null && _selectStart(peg)) {
       _gestureMode = _BoardGestureMode.placement;
       previewWorld = worldPoint;
@@ -188,11 +200,7 @@ class TriGridFlameGame extends FlameGame {
 
     if (_gestureMode == _BoardGestureMode.placement) {
       previewWorld = canvasToWorld(details.localFocalPoint);
-      snappedEnd = projection.nearestPeg(
-        previewWorld!,
-        board,
-        maximumDistance: projection.spacing * 0.42,
-      );
+      snappedEnd = _nearestTarget(previewWorld!);
       if (!validEnds.contains(snappedEnd)) {
         snappedEnd = null;
       }
@@ -218,6 +226,35 @@ class TriGridFlameGame extends FlameGame {
           camera.viewfinder.zoom;
     }
     _gestureMode = _BoardGestureMode.none;
+  }
+
+  double get inputTargetRadius => 24 / camera.viewfinder.zoom;
+  double get endpointRingRadius => 18 / camera.viewfinder.zoom;
+  double get endpointStrokeWidth => 2.5 / camera.viewfinder.zoom;
+
+  GridCoordinate? _nearestTarget(Vector2 point) {
+    GridCoordinate? nearest;
+    var distance = inputTargetRadius;
+    for (final end in validEnds) {
+      final candidate = projection.toWorld(end).distanceTo(point);
+      if (candidate <= distance) {
+        nearest = end;
+        distance = candidate;
+      }
+    }
+    return nearest;
+  }
+
+  GridCoordinate? _inputPeg(Vector2 point, {bool preferValidEnd = false}) {
+    if (preferValidEnd && selectedStart != null) {
+      final target = _nearestTarget(point);
+      if (target != null) return target;
+    }
+    return projection.nearestPeg(
+      point,
+      board,
+      maximumDistance: inputTargetRadius,
+    );
   }
 
   void showHint() {
@@ -311,7 +348,6 @@ class TriGridFlameGame extends FlameGame {
 
   void animateTransition(GameTransition transition) {
     _wake();
-    final settings = session.feelSettings.value;
     final actingPlayer = transition.state.players.firstWhere(
       (player) => player.id == transition.action.playerId,
     );
@@ -319,14 +355,14 @@ class TriGridFlameGame extends FlameGame {
     final captures = transition.validation.newlyCapturedTriangles
         .map((triangle) => triangle.id)
         .toList(growable: false);
-    _moveAnimation = settings.reducedMotion
+    _moveAnimation = reducedMotion
         ? null
         : _MoveAnimation(
             actionId: transition.action.actionId,
             captureIds: captures,
             fromSeat: actingPlayer.visualIndex,
             toSeat: nextPlayer.visualIndex,
-            durationScale: settings.motionScale,
+            durationScale: motionScale,
           );
     if (transition.state.matchResult != null) {
       _celebrationElapsed = 0;
@@ -337,6 +373,7 @@ class TriGridFlameGame extends FlameGame {
   }
 
   double bandPlacementProgress(String actionId) {
+    if (reducedMotion) return 1;
     final animation = _moveAnimation;
     if (animation == null || animation.actionId != actionId) {
       return 1;
@@ -348,6 +385,7 @@ class TriGridFlameGame extends FlameGame {
   }
 
   double captureProgress(String triangleId) {
+    if (reducedMotion) return 1;
     final animation = _moveAnimation;
     if (animation == null) {
       return 1;
@@ -363,6 +401,7 @@ class TriGridFlameGame extends FlameGame {
   }
 
   double markerDropProgress(String triangleId) {
+    if (reducedMotion) return 1;
     final animation = _moveAnimation;
     if (animation == null) {
       return 1;
@@ -379,11 +418,19 @@ class TriGridFlameGame extends FlameGame {
   }
 
   bool get hasActiveMoveAnimation {
+    if (reducedMotion) return false;
     final animation = _moveAnimation;
     return animation != null && animation.elapsed < animation.totalDuration;
   }
 
   Color get boardRimColor {
+    if (_invalidElapsed < 0.3) {
+      return Color.lerp(
+        const Color(0xFFE7858C),
+        PlayerVisuals.forSeat(state.currentPlayer.visualIndex).color,
+        _invalidElapsed / 0.3,
+      )!;
+    }
     final animation = _moveAnimation;
     if (animation == null) {
       return PlayerVisuals.forSeat(state.currentPlayer.visualIndex).color;
@@ -403,7 +450,9 @@ class TriGridFlameGame extends FlameGame {
     if (coordinate != selectedStart) {
       return 1;
     }
-    return 0.94;
+    if (reducedMotion) return 0.96;
+    final t = (_selectionElapsed / 0.32).clamp(0.0, 1.0);
+    return 1.06 - 0.14 * math.exp(-6 * t) * math.cos(10 * t);
   }
 
   Vector2? get invalidReturnPoint {
@@ -412,7 +461,7 @@ class TriGridFlameGame extends FlameGame {
     if (from == null || start == null) {
       return null;
     }
-    final duration = 0.2 * session.feelSettings.value.motionScale;
+    final duration = 0.2 * motionScale;
     if (duration <= 0 || _returnElapsed >= duration) {
       return null;
     }
@@ -426,10 +475,16 @@ class TriGridFlameGame extends FlameGame {
   Offset get boardShakeOffset {
     final animation = _moveAnimation;
     final settings = session.feelSettings.value;
+    if (settings.screenShake && !reducedMotion && _invalidElapsed < 0.28) {
+      return Offset(
+        math.sin(_invalidElapsed * 80) * 3 * (1 - _invalidElapsed / 0.28),
+        0,
+      );
+    }
     if (animation == null ||
         animation.captureIds.isEmpty ||
         !settings.screenShake ||
-        settings.reducedMotion) {
+        reducedMotion) {
       return Offset.zero;
     }
     final start = animation.bandDuration * 0.48;
@@ -453,7 +508,7 @@ class TriGridFlameGame extends FlameGame {
     if (result == null || !result.winnerPlayerIds.contains(playerId)) {
       return 1;
     }
-    if (session.feelSettings.value.reducedMotion) {
+    if (reducedMotion) {
       return 1.06;
     }
     return 1.05 + math.sin(_celebrationElapsed * 6) * 0.045;
@@ -472,6 +527,7 @@ class TriGridFlameGame extends FlameGame {
       return false;
     }
     selectedStart = coordinate;
+    _selectionElapsed = 0;
     validEnds = Set<GridCoordinate>.unmodifiable(endpoints);
     previewWorld = null;
     snappedEnd = null;
@@ -509,7 +565,7 @@ class TriGridFlameGame extends FlameGame {
   void _updateCameraInertia(double dt) {
     if (_inertiaVelocity.length2 < 1 ||
         _celebrationStartPosition != null ||
-        session.feelSettings.value.reducedMotion) {
+        reducedMotion) {
       _inertiaVelocity = Vector2.zero();
       return;
     }
@@ -523,8 +579,7 @@ class TriGridFlameGame extends FlameGame {
     if (startPosition == null) {
       return;
     }
-    _celebrationElapsed += dt;
-    final duration = 0.82 * session.feelSettings.value.motionScale;
+    final duration = 0.82 * motionScale;
     final progress = duration <= 0
         ? 1.0
         : _smoothStep((_celebrationElapsed / duration).clamp(0, 1));
@@ -565,6 +620,12 @@ class TriGridFlameGame extends FlameGame {
 
   bool get _needsContinuousFrames =>
       hasActiveMoveAnimation ||
+      _invalidElapsed < 0.3 ||
+      (selectedStart != null && _selectionElapsed < 0.32) ||
+      (isCelebrating &&
+          session.feelSettings.value.particles &&
+          !reducedMotion &&
+          _celebrationElapsed <= 3.2) ||
       invalidReturnPoint != null ||
       _inertiaVelocity.length2 >= 1 ||
       _celebrationStartPosition != null;
@@ -575,6 +636,22 @@ class TriGridFlameGame extends FlameGame {
       resumeEngine();
     }
   }
+
+  void animateInvalid() {
+    _invalidElapsed = 0;
+    _wake();
+  }
+
+  @override
+  void onRemove() {
+    if (session.onInvalidFeedback == animateInvalid) {
+      session.onInvalidFeedback = null;
+    }
+    if (session.onAcceptedTransition == animateTransition) {
+      session.onAcceptedTransition = null;
+    }
+    super.onRemove();
+  }
 }
 
 double _smoothStep(double value) => value * value * (3 - 2 * value);
@@ -583,10 +660,11 @@ double _elasticOut(double value) {
   if (value == 0 || value == 1) {
     return value;
   }
-  return math.pow(2, -9 * value) *
-          math.sin((value * 9.5 - 0.7) * math.pi) *
-          0.17 +
-      1;
+  // Continuous at zero: the previous elastic approximation jumped almost
+  // the entire band length on its first frame.
+  return 1 -
+      math.exp(-8 * value) *
+          (math.cos(12 * value) + (8 / 12) * math.sin(12 * value));
 }
 
 double _bounceOut(double value) {

@@ -26,6 +26,8 @@ class LanGameSessionController extends LocalGameSessionController {
        ) {
     state.value = client.latestGameState!;
     lobby.value = client.latestLobby;
+    networkPaused.value = client.latestLobby?.gamePaused ?? false;
+    isPaused.value = networkPaused.value;
   }
 
   LanClientConnection _client;
@@ -65,6 +67,7 @@ class LanGameSessionController extends LocalGameSessionController {
   @override
   void onReady() {
     // The authoritative host, never a LAN client, runs automated seats.
+    presentResultWhenReady();
   }
 
   @override
@@ -88,7 +91,16 @@ class LanGameSessionController extends LocalGameSessionController {
 
   @override
   void setPaused(bool value) {
-    isPaused.value = value;
+    if (currentState.isGameOver ||
+        connectionStatus.value == LanConnectionStatus.closed) {
+      return;
+    }
+    isPaused.value = value || networkPaused.value;
+  }
+
+  @override
+  void restart({bool newRound = true}) {
+    // A LAN client cannot restart its local engine independently of the host.
   }
 
   void _attachClient(LanClientConnection next) {
@@ -97,11 +109,24 @@ class LanGameSessionController extends LocalGameSessionController {
     _latencySubscription?.cancel();
     _client = next;
     connectionStatus.value = next.status;
+    if (next.status == LanConnectionStatus.closed && !currentState.isGameOver) {
+      networkErrorCode.value = 'host_ended';
+    }
     latencyMilliseconds.value = next.latencyMilliseconds;
+    lobby.value = next.latestLobby;
+    networkPaused.value =
+        !currentState.isGameOver && (next.latestLobby?.gamePaused ?? false);
+    isPaused.value = networkPaused.value;
     _messageSubscription = next.messages.listen(_handleMessage);
     _statusSubscription = next.statusChanges.listen((status) {
       connectionStatus.value = status;
-      if (status == LanConnectionStatus.disconnected) {
+      if (status == LanConnectionStatus.closed && !currentState.isGameOver) {
+        networkPaused.value = false;
+        isPaused.value = false;
+        networkErrorCode.value = 'host_ended';
+      }
+      if (status == LanConnectionStatus.disconnected &&
+          !currentState.isGameOver) {
         unawaited(reconnect());
       }
     });
@@ -118,12 +143,14 @@ class LanGameSessionController extends LocalGameSessionController {
         final code = MoveValidationErrorCode.values.byName(
           envelope.payload['errorCode']! as String,
         );
-        prompt.value = BoardPrompt.validationError(code);
+        showValidationError(code);
       case LanMessageType.stateSnapshot:
         _applySnapshot(envelope);
       case LanMessageType.gamePaused:
-        networkPaused.value = true;
-        isPaused.value = true;
+        if (!currentState.isGameOver) {
+          networkPaused.value = true;
+          isPaused.value = true;
+        }
       case LanMessageType.gameResumed:
         networkPaused.value = false;
         isPaused.value = false;
@@ -139,7 +166,8 @@ class LanGameSessionController extends LocalGameSessionController {
         isReconnecting.value = false;
         connectionStatus.value = LanConnectionStatus.closed;
         networkPaused.value = false;
-        networkErrorCode.value = 'host_ended';
+        isPaused.value = false;
+        networkErrorCode.value = currentState.isGameOver ? null : 'host_ended';
       case LanMessageType.matchStarted ||
           LanMessageType.joinRequest ||
           LanMessageType.joinAccepted ||
@@ -157,6 +185,7 @@ class LanGameSessionController extends LocalGameSessionController {
   }
 
   void _applyAccepted(LanEnvelope envelope) {
+    if (isReplaying.value) return;
     final action = SubmitMoveAction.fromJson(
       envelope.payload['action']! as Map<String, Object?>,
     );
@@ -169,6 +198,7 @@ class LanGameSessionController extends LocalGameSessionController {
       networkErrorCode.value = 'state_hash_mismatch';
       return;
     }
+    if (authoritativeState.revision < currentState.revision) return;
     if (acceptedActions.any((item) => item.actionId == action.actionId)) {
       if (authoritativeState.revision >= currentState.revision) {
         state.value = authoritativeState;
@@ -185,7 +215,7 @@ class LanGameSessionController extends LocalGameSessionController {
       applyConfirmedTransition(transition, allowHandoff: false);
     } else {
       state.value = authoritativeState;
-      showResult.value = authoritativeState.isGameOver;
+      presentResultWhenReady();
       onStateChanged?.call(authoritativeState);
       if (authoritativeState.isGameOver) {
         onMatchCompleted?.call(
@@ -194,11 +224,17 @@ class LanGameSessionController extends LocalGameSessionController {
           largestMultiCapture,
         );
       }
-      networkErrorCode.value = 'state_resynchronized';
+      // Successful resync is recovery, not an error that needs a banner.
+      networkErrorCode.value = null;
+    }
+    if (authoritativeState.isGameOver) {
+      networkPaused.value = false;
+      isPaused.value = false;
     }
   }
 
   void _applySnapshot(LanEnvelope envelope) {
+    if (isReplaying.value) return;
     final authoritativeState = GameState.fromJson(
       envelope.payload['state']! as Map<String, Object?>,
     );
@@ -207,8 +243,13 @@ class LanGameSessionController extends LocalGameSessionController {
       networkErrorCode.value = 'state_hash_mismatch';
       return;
     }
+    if (authoritativeState.revision < currentState.revision) return;
     state.value = authoritativeState;
-    showResult.value = authoritativeState.isGameOver;
+    presentResultWhenReady();
+    if (authoritativeState.isGameOver) {
+      networkPaused.value = false;
+      isPaused.value = false;
+    }
     onStateChanged?.call(authoritativeState);
     if (authoritativeState.isGameOver) {
       onMatchCompleted?.call(
@@ -221,6 +262,8 @@ class LanGameSessionController extends LocalGameSessionController {
 
   Future<void> reconnect() async {
     if (isReconnecting.value ||
+        _shutdownFuture != null ||
+        currentState.isGameOver ||
         connectionStatus.value == LanConnectionStatus.closed) {
       return;
     }
@@ -239,14 +282,34 @@ class LanGameSessionController extends LocalGameSessionController {
           await replacement.close();
           break;
         }
+        final previous = _client;
         _attachClient(replacement);
+        unawaited(previous.close());
         final snapshot = replacement.latestGameState;
         if (snapshot != null) {
           state.value = snapshot;
+          presentResultWhenReady();
           onStateChanged?.call(snapshot);
+          if (snapshot.isGameOver) {
+            networkPaused.value = false;
+            isPaused.value = false;
+            onMatchCompleted?.call(
+              snapshot,
+              acceptedActions,
+              largestMultiCapture,
+            );
+          }
         }
         isReconnecting.value = false;
         networkErrorCode.value = null;
+        return;
+      } on LanConnectionException {
+        if (generation != _reconnectGeneration) return;
+        isReconnecting.value = false;
+        connectionStatus.value = LanConnectionStatus.closed;
+        networkPaused.value = false;
+        isPaused.value = false;
+        networkErrorCode.value = 'host_ended';
         return;
       } on Object {
         await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
@@ -262,6 +325,7 @@ class LanGameSessionController extends LocalGameSessionController {
 
   void handleLifecycle(bool resumed) {
     if (resumed &&
+        !currentState.isGameOver &&
         connectionStatus.value == LanConnectionStatus.disconnected &&
         networkErrorCode.value != 'host_ended') {
       unawaited(reconnect());
@@ -273,7 +337,7 @@ class LanGameSessionController extends LocalGameSessionController {
   }
 
   void clearNetworkError() {
-    networkErrorCode.value = null;
+    if (networkErrorCode.value != 'host_ended') networkErrorCode.value = null;
   }
 
   Future<void> shutdown() {

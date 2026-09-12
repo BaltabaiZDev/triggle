@@ -42,6 +42,8 @@ class BoardSize {
 
   bool get isClassic => preset == BoardSizePreset.classic && radius == 3;
 
+  int get maximumPlayers => radius == 2 ? 2 : 4;
+
   int get expectedPegCount => 1 + 3 * radius * (radius + 1);
 
   int get expectedTriangleCount => 6 * radius * radius;

@@ -250,7 +250,9 @@ void main() {
       );
       final deviceMetadata = await _deviceMetadata();
 
-      await tester.pumpWidget(TriGridApp(repository: repository));
+      await tester.pumpWidget(
+        TriGridApp(repository: repository, ambientMotion: false),
+      );
       await tester.pumpAndSettle();
       expect(find.text('TriGrid'), findsOneWidget);
       expect(find.text('Play on one phone'), findsOneWidget);
@@ -258,10 +260,10 @@ void main() {
       await tester.tap(find.text('Play on one phone'));
       await tester.pumpAndSettle();
       expect(find.text('Local game'), findsOneWidget);
-      expect(find.text('Classic rules'), findsOneWidget);
+      expect(find.text('Classic board'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Start match'));
-      await tester.tap(find.text('Start match'));
+      await tester.ensureVisible(find.byTooltip('Start match'));
+      await tester.tap(find.byTooltip('Start match'));
       await tester.pump();
       await Future<void>.delayed(const Duration(milliseconds: 900));
       await tester.pump();

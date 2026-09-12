@@ -72,7 +72,7 @@ void main() {
       final transition = controller.submitMove(move.start, move.end);
       expect(transition?.wasAccepted, isTrue);
       guard++;
-      expect(guard, lessThanOrEqualTo(20));
+      expect(guard, lessThanOrEqualTo(28));
     }
 
     expect(controller.currentState.matchResult, isNotNull);
@@ -139,6 +139,8 @@ void main() {
 
     presentedRevisions.clear();
     await controller.replayAcceptedActions();
+    expect(controller.showResult.value, isFalse);
+    await Future<void>.delayed(const Duration(milliseconds: 750));
 
     expect(GameStateHasher.hash(controller.currentState), finalHash);
     expect(controller.currentState.revision, finalRevision);
@@ -238,6 +240,10 @@ void main() {
 
     expect(controller.currentState.revision, 0);
     expect(controller.acceptedActions, isEmpty);
+    expect(controller.isBotThinking.value, isTrue);
+    provider.complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.currentState.revision, 1);
     expect(controller.isBotThinking.value, isFalse);
   });
 
@@ -476,23 +482,31 @@ class _FirstLegalBot implements BotMoveProvider {
 }
 
 class _ControllableBot implements BotMoveProvider {
-  final Completer<BotDecision> _completer = Completer<BotDecision>();
-  late GameState _state;
-  late BotSettings _settings;
+  final _pending =
+      <
+        ({
+          Completer<BotDecision> completer,
+          GameState state,
+          BotSettings settings,
+        })
+      >[];
 
   @override
   Future<BotDecision> chooseMove(GameState state, BotSettings settings) {
-    _state = state;
-    _settings = settings;
-    return _completer.future;
+    final completer = Completer<BotDecision>();
+    _pending.add((completer: completer, state: state, settings: settings));
+    return completer.future;
   }
 
   void complete() {
-    final move = GameEngine(_state.settings).validator.legalMoves(_state).first;
-    _completer.complete(
+    final request = _pending.removeAt(0);
+    final move = GameEngine(
+      request.state.settings,
+    ).validator.legalMoves(request.state).first;
+    request.completer.complete(
       BotDecision(
         move: move,
-        difficulty: _settings.difficulty,
+        difficulty: request.settings.difficulty,
         estimatedValue: 1,
         nodesVisited: 1,
         completedDepth: 1,

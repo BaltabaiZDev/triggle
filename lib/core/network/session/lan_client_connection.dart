@@ -16,7 +16,33 @@ enum LanConnectionStatus {
   closed,
 }
 
+class LanConnectionException implements Exception {
+  const LanConnectionException(this.code);
+  final String code;
+  @override
+  String toString() => 'LAN connection: $code';
+}
+
 class LanClientConnection {
+  static String urlForHost(String address) {
+    final trimmed = address.trim();
+    final uri = Uri.tryParse(
+      trimmed.contains('://') ? trimmed : 'ws://$trimmed',
+    );
+    if (uri == null ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        !const {'ws', 'wss', 'http', 'https'}.contains(uri.scheme)) {
+      throw const FormatException('Enter a LAN host address.');
+    }
+    return Uri(
+      scheme: const {'wss', 'https'}.contains(uri.scheme) ? 'wss' : 'ws',
+      host: uri.host,
+      port: uri.hasPort ? uri.port : 42422,
+      path: '/ws',
+    ).toString();
+  }
+
   LanClientConnection._({
     required WebSocket socket,
     required this.websocketUrl,
@@ -33,7 +59,19 @@ class LanClientConnection {
     String? sessionToken,
     Duration timeout = const Duration(seconds: 8),
   }) async {
-    final socket = await WebSocket.connect(websocketUrl).timeout(timeout);
+    final pendingSocket = WebSocket.connect(websocketUrl);
+    final socket = await pendingSocket.timeout(
+      timeout,
+      onTimeout: () {
+        // Future.timeout does not cancel the underlying handshake.
+        unawaited(
+          pendingSocket.then<void>((lateSocket) async {
+            await lateSocket.close(WebSocketStatus.goingAway);
+          }, onError: (Object _) {}),
+        );
+        throw TimeoutException('LAN handshake timed out.', timeout);
+      },
+    );
     final client = LanClientConnection._(
       socket: socket,
       websocketUrl: websocketUrl,
@@ -115,7 +153,7 @@ class LanClientConnection {
       _setStatus(LanConnectionStatus.incompatible);
       if (!_joinCompleter.isCompleted) {
         _joinCompleter.completeError(
-          StateError('Incompatible TriGrid LAN protocol.'),
+          const LanConnectionException('incompatible_protocol'),
         );
       }
       return;
@@ -166,7 +204,9 @@ class LanClientConnection {
         case LanMessageType.error:
           lastErrorCode = envelope.payload['code']! as String;
           if (!_joinCompleter.isCompleted) {
-            _joinCompleter.completeError(StateError(lastErrorCode!));
+            _joinCompleter.completeError(
+              LanConnectionException(lastErrorCode!),
+            );
           }
         case LanMessageType.ping:
           final sentAt = envelope.payload['sentAt']! as int;
@@ -175,6 +215,12 @@ class LanClientConnection {
           _send(LanMessageType.pong, {'sentAt': sentAt});
         case LanMessageType.hostEnded:
           _hostEnded = true;
+          lastErrorCode = 'host_ended';
+          if (!_joinCompleter.isCompleted) {
+            _joinCompleter.completeError(
+              const LanConnectionException('host_ended'),
+            );
+          }
           _setStatus(LanConnectionStatus.closed);
         case LanMessageType.gamePaused ||
             LanMessageType.gameResumed ||

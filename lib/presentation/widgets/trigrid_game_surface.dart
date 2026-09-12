@@ -1,4 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
+
+/// Shared shell for support screens; never wraps/rebuilds the Flame playfield.
+class GamePage extends StatelessWidget {
+  const GamePage({
+    required this.body,
+    this.appBar,
+    this.extendBodyBehindAppBar = false,
+    super.key,
+  });
+  final Widget body;
+  final PreferredSizeWidget? appBar;
+  final bool extendBodyBehindAppBar;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: appBar,
+    extendBodyBehindAppBar: extendBodyBehindAppBar,
+    body: TriGridBackdrop(dense: true, child: GameReveal(child: body)),
+  );
+}
 
 class TriGridBackdrop extends StatelessWidget {
   const TriGridBackdrop({required this.child, this.dense = false, super.key});
@@ -14,13 +34,13 @@ class TriGridBackdrop extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF292C2A), Color(0xFF202321)],
+          colors: [Color(0xFF303C35), Color(0xFF191F1C)],
         ),
       ),
       child: CustomPaint(
         painter: _TriGridBackdropPainter(
-          lineColor: Colors.white.withValues(alpha: 0.025),
-          glowColor: theme.colorScheme.primary.withValues(alpha: 0.035),
+          lineColor: Colors.white.withValues(alpha: 0.018),
+          glowColor: theme.colorScheme.primary.withValues(alpha: 0.12),
           dense: dense,
         ),
         child: child,
@@ -61,8 +81,8 @@ class TriGridPanel extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.42),
-            blurRadius: 0,
-            offset: const Offset(3, 3),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -94,7 +114,7 @@ class TriGridSectionTitle extends StatelessWidget {
   }
 }
 
-class TriGridGameButton extends StatefulWidget {
+class TriGridGameButton extends StatelessWidget {
   const TriGridGameButton({
     required this.icon,
     required this.label,
@@ -104,7 +124,6 @@ class TriGridGameButton extends StatefulWidget {
     this.compact = false,
     super.key,
   });
-
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
@@ -113,78 +132,62 @@ class TriGridGameButton extends StatefulWidget {
   final bool compact;
 
   @override
-  State<TriGridGameButton> createState() => _TriGridGameButtonState();
-}
-
-class _TriGridGameButtonState extends State<TriGridGameButton> {
-  var _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = widget.accentColor ?? theme.colorScheme.primary;
-    final foreground = widget.primary
-        ? Colors.white
+    final accent = accentColor ?? theme.colorScheme.primary;
+    final face = primary ? accent : theme.colorScheme.surface;
+    final foreground = primary
+        ? const Color(0xFF13251B)
         : theme.colorScheme.onSurface;
-    return Semantics(
-      button: true,
-      child: AnimatedScale(
-        scale: _pressed ? 0.975 : 1,
-        duration: const Duration(milliseconds: 70),
-        curve: Curves.easeOut,
+    return GamePress(
+      child: Semantics(
+        button: true,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: widget.onPressed,
-            onHighlightChanged: (value) {
-              if (_pressed != value) {
-                setState(() => _pressed = value);
-              }
-            },
-            splashFactory: InkSplash.splashFactory,
-            borderRadius: BorderRadius.circular(4),
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(5),
             child: Ink(
-              height: widget.compact ? 40 : 46,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.compact ? 10 : 13,
-              ),
+              height: compact ? 46 : 52,
+              padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
               decoration: BoxDecoration(
-                color: widget.primary
-                    ? accent
-                    : theme.colorScheme.surface.withValues(alpha: 0.94),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.92),
-                  width: 2,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color.lerp(face, Colors.white, 0.10)!, face],
                 ),
-                boxShadow: _pressed
-                    ? null
-                    : const [
-                        BoxShadow(
-                          color: Color(0x99000000),
-                          blurRadius: 0,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: const Color(0xFF101A14), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Color.lerp(face, Colors.black, 0.45)!,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    widget.icon,
-                    size: widget.compact ? 17 : 19,
-                    color: widget.primary ? Colors.white : accent,
+                    icon,
+                    size: compact ? 18 : 22,
+                    color: primary ? foreground : accent,
                   ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      widget.label,
+                      label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: foreground,
-                        fontSize: widget.compact ? 12 : 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: compact ? 12 : 15,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -211,7 +214,7 @@ class _TriGridBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final spacing = dense ? 5.0 : 7.0;
+    final spacing = dense ? 44.0 : 54.0;
     final linePaint = Paint()
       ..color = lineColor
       ..style = PaintingStyle.stroke

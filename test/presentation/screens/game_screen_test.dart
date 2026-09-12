@@ -64,11 +64,11 @@ void main() {
           .first;
       session.submitMove(move.start, move.end);
     }
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2200));
 
     expect(find.text('Match complete'), findsOneWidget);
-    expect(find.text('Final scores'), findsOneWidget);
-    expect(find.text('Restart'), findsOneWidget);
+    expect(find.text('Final scores'), findsNothing);
+    expect(find.byTooltip('Restart'), findsOneWidget);
     expect(find.byKey(const Key('match-result-surface')), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const Key('match-result-surface'))),
@@ -76,9 +76,9 @@ void main() {
     );
     expect(find.byTooltip('Pause').hitTestable(), findsNothing);
     expect(find.byTooltip('Reset camera').hitTestable(), findsNothing);
-    expect(find.text('Restart').hitTestable(), findsOneWidget);
+    expect(find.byTooltip('Restart').hitTestable(), findsOneWidget);
 
-    await tester.tap(find.text('Restart'));
+    await tester.tap(find.byTooltip('Restart'));
     await tester.pump();
 
     expect(session.currentState.revision, 0);
@@ -177,6 +177,10 @@ void main() {
       var lifecycleTriggeredReconnect = false;
       final reconnected = await tester.runAsync(() async {
         await originalClient.close();
+        // close() deliberately leaves a room. Model a transient transport loss
+        // explicitly here so foreground recovery does not inherit that terminal
+        // status; host-ended sessions must never reconnect.
+        session.networkErrorCode.value = null;
         session.connectionStatus.value = LanConnectionStatus.disconnected;
         tester.binding.handleAppLifecycleStateChanged(
           AppLifecycleState.resumed,

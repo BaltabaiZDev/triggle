@@ -97,8 +97,11 @@ class AppController extends GetxController {
     required List<SubmitMoveAction> actions,
     required int largestMultiCapture,
   }) async {
-    if (!state.isGameOver ||
-        _data.completedMatchIds.contains(state.settings.matchId)) {
+    if (!state.isGameOver) return;
+    if (localSnapshot.value?.state.settings.matchId == state.settings.matchId) {
+      await clearLocalSnapshot();
+    }
+    if (_data.completedMatchIds.contains(state.settings.matchId)) {
       return;
     }
     final completedIds = {..._data.completedMatchIds, state.settings.matchId};
@@ -146,9 +149,7 @@ class AppController extends GetxController {
 
     statistics.value = updatedStatistics;
     replays.assignAll(updatedReplays);
-    localSnapshot.value = null;
     _data = _data.copyWith(
-      clearLocalSnapshot: true,
       statistics: updatedStatistics,
       replays: updatedReplays,
       completedMatchIds: completedIds,
@@ -211,6 +212,8 @@ class AppController extends GetxController {
   SavedMatchSnapshot? _verifiedSnapshot(SavedMatchSnapshot? snapshot) {
     if (snapshot == null ||
         snapshot.state.isGameOver ||
+        snapshot.state.revision == 0 ||
+        _data.completedMatchIds.contains(snapshot.state.settings.matchId) ||
         GameStateHasher.hash(snapshot.state) != snapshot.stateHash) {
       return null;
     }

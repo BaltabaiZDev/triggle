@@ -213,17 +213,22 @@ class TriGridBoardComponent extends Component {
       }
       canvas.restore();
       if (progress < 1) {
-        canvas.drawPath(
-          path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 8 * (1 - progress)
-            ..maskFilter = MaskFilter.blur(
-              BlurStyle.normal,
-              game.board.size.radius >= 5 ? 6 : 9,
-            )
-            ..color = visuals.color.withValues(alpha: 0.72),
-        );
+        // Layered light strokes avoid a per-triangle offscreen blur pass.
+        final glow = 1 - progress;
+        for (var layer = 3; layer >= 1; layer--) {
+          canvas.drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeJoin = StrokeJoin.round
+              ..strokeWidth = layer * 5 * glow
+              ..color = Color.lerp(
+                visuals.color,
+                const Color(0xFFFFFFFF),
+                0.35,
+              )!.withValues(alpha: glow * (0.32 / layer)),
+          );
+        }
         _renderCaptureParticles(canvas, triangle, visuals, progress);
       }
       canvas.drawPath(
@@ -280,10 +285,10 @@ class TriGridBoardComponent extends Component {
       final point = _pegPositions[endpoint]!;
       canvas.drawCircle(
         Offset(point.x, point.y),
-        18,
+        game.endpointRingRadius,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
+          ..strokeWidth = game.endpointStrokeWidth
           ..color = activeVisuals.color.withValues(alpha: 0.72),
       );
     }
@@ -392,8 +397,7 @@ class TriGridBoardComponent extends Component {
     PlayerVisuals visuals,
     double progress,
   ) {
-    if (!game.session.feelSettings.value.particles ||
-        game.session.feelSettings.value.reducedMotion) {
+    if (!game.session.feelSettings.value.particles || game.reducedMotion) {
       return;
     }
     final center = _triangleCenters[triangle.id]!;
@@ -420,7 +424,7 @@ class TriGridBoardComponent extends Component {
   void _renderCelebration(Canvas canvas) {
     if (!game.isCelebrating ||
         !game.session.feelSettings.value.particles ||
-        game.session.feelSettings.value.reducedMotion) {
+        game.reducedMotion) {
       return;
     }
     final time = game.celebrationTime;

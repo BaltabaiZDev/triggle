@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trigrid/core/network/protocol/lan_envelope.dart';
 
 import '../../tool/verify_lan_device_matrix.dart';
 
@@ -81,7 +82,7 @@ void main() {
           'acceptanceBuildId': buildId,
           'recordedAtUtc': '2026-07-31T06:00:00.000Z',
           'networkPath': scenario.value.network,
-          'protocolVersion': 1,
+          'protocolVersion': LanEnvelope.currentProtocolVersion,
           'hostDevice': device(scenario.value.host, '${scenario.key}_host'),
           'clientDevice': device(
             scenario.value.client,

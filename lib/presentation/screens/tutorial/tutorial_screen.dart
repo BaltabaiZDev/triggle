@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
+import 'package:trigrid/presentation/widgets/game_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:trigrid/app/controllers/app_controller.dart';
@@ -44,8 +46,13 @@ class _TutorialScreenState extends State<TutorialScreen> {
       ),
       (Icons.emoji_events_rounded, l10n.tutorialWinTitle, l10n.tutorialWinBody),
     ];
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.tutorialTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.tutorialTitle),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -94,14 +101,16 @@ class _TutorialScreenState extends State<TutorialScreen> {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
               child: Row(
                 children: [
-                  TextButton(
-                    onPressed: _page == 0
-                        ? null
-                        : () => _pageController.previousPage(
-                            duration: const Duration(milliseconds: 240),
-                            curve: Curves.easeOut,
-                          ),
-                    child: Text(l10n.previousStep),
+                  GamePress(
+                    child: TextButton(
+                      onPressed: _page == 0
+                          ? null
+                          : () => _pageController.previousPage(
+                              duration: const Duration(milliseconds: 240),
+                              curve: const GameSpringCurve(),
+                            ),
+                      child: Text(l10n.previousStep),
+                    ),
                   ),
                   Expanded(
                     child: Row(
@@ -121,18 +130,22 @@ class _TutorialScreenState extends State<TutorialScreen> {
                     ),
                   ),
                   if (_page < steps.length - 1)
-                    FilledButton(
-                      onPressed: () => _pageController.nextPage(
-                        duration: const Duration(milliseconds: 240),
-                        curve: Curves.easeOut,
+                    GamePress(
+                      child: FilledButton(
+                        onPressed: () => _pageController.nextPage(
+                          duration: const Duration(milliseconds: 240),
+                          curve: const GameSpringCurve(),
+                        ),
+                        child: Text(l10n.nextStep),
                       ),
-                      child: Text(l10n.nextStep),
                     )
                   else
-                    FilledButton.icon(
-                      onPressed: () => _startPractice(l10n),
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: Text(l10n.startPractice),
+                    GamePress(
+                      child: FilledButton.icon(
+                        onPressed: () => _startPractice(l10n),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(l10n.startPractice),
+                      ),
                     ),
                 ],
               ),

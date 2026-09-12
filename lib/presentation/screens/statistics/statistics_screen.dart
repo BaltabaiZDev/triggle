@@ -1,3 +1,5 @@
+import 'package:trigrid/presentation/widgets/game_motion.dart';
+import 'package:trigrid/presentation/widgets/trigrid_game_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:trigrid/app/controllers/app_controller.dart';
@@ -12,8 +14,13 @@ class StatisticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = Get.find<AppController>();
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.statisticsTitle)),
+    return GamePage(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? const GamePress(child: BackButton())
+            : null,
+        title: Text(l10n.statisticsTitle),
+      ),
       body: SafeArea(
         child: Obx(() {
           final statistics = controller.statistics.value;
@@ -133,7 +140,13 @@ class _StatTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: Theme.of(context).textTheme.headlineSmall),
+          GameSwitcher(
+            child: Text(
+              value,
+              key: ValueKey(value),
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
